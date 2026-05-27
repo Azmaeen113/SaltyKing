@@ -308,7 +308,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 }
 
 /* Hard-fix ranks: nav always visible + list always scrollable */
-#leaderboard-screen.video-bg-screen{
+#leaderboard-screen.video-bg-screen.active{
   position:relative;
   display:flex;
   flex-direction:column;
@@ -1483,6 +1483,10 @@ const WHEEL_SEGMENTS = [
 const WHEEL_SLICE = (Math.PI * 2) / WHEEL_SEGMENTS.length;
 let wheelAngle = 0;
 let wheelSpinning = false;
+const wheelHubImage = new Image();
+wheelHubImage.src = 'logo/spinwheelmiddlechar.png';
+wheelHubImage.addEventListener('load', () => drawWheelHub(wheelAngle));
+wheelHubImage.addEventListener('error', () => console.warn('Wheel hub image failed to load: logo/spinwheelmiddlechar.png'));
 
 // =================== BOARD TILES ===================
 const tiles = [];
@@ -2028,7 +2032,7 @@ function drawWheel(rot = wheelAngle) {
   ctx.stroke();
 }
 
-function drawWheelHub() {
+function drawWheelHub(rot = wheelAngle) {
   const hub = document.getElementById('hubCanvas');
   if(!hub) return;
   const c = hub.getContext('2d');
@@ -2051,15 +2055,27 @@ function drawWheelHub() {
   c.arc(cx,cy,46,0,Math.PI*2);
   c.fillStyle = core;
   c.fill();
-  c.font = '900 12px Cinzel, serif';
-  c.fillStyle = '#ffea80';
-  c.textAlign = 'center';
-  c.fillText('SPIN', cx, cy + 4);
+  if(wheelHubImage.complete && wheelHubImage.naturalWidth > 0) {
+    const iconSize = 52;
+    c.save();
+    c.translate(cx, cy);
+    c.rotate(rot);
+    c.beginPath();
+    c.arc(0, 0, 28, 0, Math.PI * 2);
+    c.clip();
+    c.drawImage(wheelHubImage, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
+    c.restore();
+  } else {
+    c.font = '900 12px Cinzel, serif';
+    c.fillStyle = '#ffea80';
+    c.textAlign = 'center';
+    c.fillText('SPIN', cx, cy + 4);
+  }
 }
 
 function initWheel() {
   drawWheel();
-  drawWheelHub();
+  drawWheelHub(wheelAngle);
   const hub = document.getElementById('hubCanvas');
   if(hub && !hub.dataset.bound) {
     hub.addEventListener('click', spinWheel);
@@ -2103,6 +2119,7 @@ function spinWheel() {
     const p = Math.min(1, (now - start) / duration);
     wheelAngle = from + (target - from) * easeOut(p);
     drawWheel(wheelAngle);
+    drawWheelHub(wheelAngle);
     if(p < 1) {
       requestAnimationFrame(tick);
       return;
