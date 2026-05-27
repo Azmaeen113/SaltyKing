@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Dice Roller</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#0b0b0b;
+  --white:#f2ede8;
+  --mid:rgba(255,255,255,0.18);
+  --dim:rgba(255,255,255,0.07);
+  --font:'Courier New','Lucida Console',monospace;
+}
+
+body{
+  width:100vw;height:100vh;overflow:hidden;
+  background:var(--bg);
+  font-family:var(--font);
+  user-select:none;
+}
+
+canvas{
+  display:block;position:absolute;inset:0;cursor:crosshair;
+}
+
+/* ── HEADER ── */
+#hdr{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:22px 32px;
+  border-bottom:1px solid var(--dim);
+  z-index:10;pointer-events:none;
+}
+.brand{
+  font-size:10px;letter-spacing:6px;
+  text-transform:uppercase;color:rgba(255,255,255,0.22);
+}
+#stats{display:flex;gap:28px}
+.stat{text-align:center}
+.stat-l{
+  font-size:8px;letter-spacing:3px;
+  text-transform:uppercase;color:rgba(255,255,255,0.15);
+  margin-bottom:1px;
+}
+.stat-v{
+  font-size:18px;font-weight:700;
+  color:rgba(255,255,255,0.55);letter-spacing:-1px;
+}
+
+/* ── RESULT ── */
+#result-wrap{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;
+  pointer-events:none;z-index:5;
+  margin-top:-90px;
+}
+#result-num{
+  font-size:120px;font-weight:900;
+  color:var(--white);letter-spacing:-8px;line-height:1;
+  opacity:0;
+  transform:scale(0.7) translateY(16px);
+  transition:opacity 0.4s cubic-bezier(0.16,1,0.3,1),
+             transform 0.4s cubic-bezier(0.16,1,0.3,1);
+  text-shadow:0 0 60px rgba(255,255,255,0.12);
+}
+#result-num.show{opacity:1;transform:scale(1) translateY(0)}
+#result-tag{
+  font-size:9px;letter-spacing:5px;text-transform:uppercase;
+  color:rgba(255,255,255,0.18);margin-top:6px;
+  opacity:0;transition:opacity 0.4s 0.12s;
+}
+#result-tag.show{opacity:1}
+
+/* ── BOTTOM BAR ── */
+#bottom{
+  position:absolute;bottom:0;left:0;right:0;
+  display:flex;flex-direction:column;align-items:center;
+  padding-bottom:44px;gap:14px;
+  z-index:10;
+}
+
+#roll-btn{
+  background:transparent;color:var(--white);
+  border:1px solid rgba(255,255,255,0.35);
+  padding:14px 58px 13px;
+  font-size:11px;font-family:var(--font);
+  letter-spacing:7px;text-transform:uppercase;
+  cursor:pointer;
+  transition:background .2s,color .2s,border-color .2s,transform .08s,opacity .2s;
+  position:relative;overflow:hidden;
+}
+#roll-btn::after{
+  content:'';position:absolute;inset:0;
+  background:var(--white);
+  transform:translateX(-110%);
+  transition:transform .25s cubic-bezier(0.4,0,0.2,1);
+  z-index:-1;
+}
+#roll-btn:hover:not(:disabled)::after{transform:translateX(0)}
+#roll-btn:hover:not(:disabled){color:#0b0b0b;border-color:var(--white)}
+#roll-btn:active:not(:disabled){transform:scale(0.965)}
+#roll-btn:disabled{opacity:0.2;cursor:not-allowed}
+
+#hint{
+  font-size:9px;letter-spacing:3px;
+  text-transform:uppercase;color:rgba(255,255,255,0.1);
+}
+
+/* ── ROLL HISTORY ── */
+#history{
+  position:absolute;top:80px;right:28px;
+  display:flex;flex-direction:column;gap:5px;
+  align-items:flex-end;z-index:10;pointer-events:none;
+}
+.hp{
+  font-size:14px;font-weight:700;letter-spacing:-0.5px;
+  color:rgba(255,255,255,0.1);
+  transition:color .4s;
+}
+.hp.fresh{color:rgba(255,255,255,0.65)}
+
+/* ── FACE DOT INDICATOR ── */
+#face-bar{
+  position:absolute;bottom:130px;left:50%;
+  transform:translateX(-50%);
+  display:flex;gap:7px;z-index:10;pointer-events:none;
+  opacity:0;transition:opacity .4s;
+}
+#face-bar.show{opacity:1}
+.face-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(255,255,255,0.12);
+  transition:background .3s;
+}
+.face-dot.active{background:rgba(255,255,255,0.8)}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <span class="brand">3D Dice</span>
+  <div id="stats">
+    <div class="stat"><div class="stat-l">Rolls</div><div class="stat-v" id="sv-rolls">0</div></div>
+    <div class="stat"><div class="stat-l">Last</div><div class="stat-v" id="sv-last">—</div></div>
+    <div class="stat"><div class="stat-l">Avg</div><div class="stat-v" id="sv-avg">—</div></div>
+    <div class="stat"><div class="stat-l">High</div><div class="stat-v" id="sv-high">—</div></div>
+  </div>
+</div>
+
+<div id="result-wrap">
+  <div id="result-num">6</div>
+  <div id="result-tag">Result</div>
+</div>
+
+<div id="bottom">
+  <button id="roll-btn">Roll</button>
+  <div id="hint">Space · Click · Tap Dice</div>
+</div>
+
+<div id="history"></div>
+
+<div id="face-bar">
+  <div class="face-dot" id="fd1"></div>
+  <div class="face-dot" id="fd2"></div>
+  <div class="face-dot" id="fd3"></div>
+  <div class="face-dot" id="fd4"></div>
+  <div class="face-dot" id="fd5"></div>
+  <div class="face-dot" id="fd6"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+/* ─── Math helpers ─── */
+const lerp = (a,b,t) => a+(b-a)*t;
+const clamp = (v,lo,hi) => Math.min(hi,Math.max(lo,v));
+
+function easeInOutQuart(t){
+  return t<.5 ? 8*t*t*t*t : 1-Math.pow(-2*t+2,4)/2;
+}
+function easeOutBack(t){
+  const c1=1.70158, c3=c1+1;
+  return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);
+}
+function easeOutBounce(t){
+  const n1=7.5625, d1=2.75;
+  if(t<1/d1) return n1*t*t;
+  if(t<2/d1) return n1*(t-=1.5/d1)*t+.75;
+  if(t<2.5/d1) return n1*(t-=2.25/d1)*t+.9375;
+  return n1*(t-=2.625/d1)*t+.984375;
+}
+
+/* ─── Texture builder ─── */
+const PIP_MAPS = {
+  1:[[128,128]],
+  2:[[180,80],[76,176]],
+  3:[[180,80],[128,128],[76,176]],
+  4:[[80,80],[176,80],[80,176],[176,176]],
+  5:[[80,80],[176,80],[128,128],[80,176],[176,176]],
+  6:[[80,74],[176,74],[80,128],[176,128],[80,182],[176,182]]
+};
+
+function rrect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.arc(x+w-r,y+r,r,-Math.PI/2,0);
+  ctx.lineTo(x+w,y+h-r); ctx.arc(x+w-r,y+h-r,r,0,Math.PI/2);
+  ctx.lineTo(x+r,y+h); ctx.arc(x+r,y+h-r,r,Math.PI/2,Math.PI);
+  ctx.lineTo(x,y+r); ctx.arc(x+r,y+r,r,Math.PI,-Math.PI/2);
+  ctx.closePath();
+}
+
+function makeFaceTex(n){
+  const S=512;
+  const cv=document.createElement('canvas');
+  cv.width=cv.height=S;
+  const cx=cv.getContext('2d');
+
+  /* Deep black surround = visible edge when faces meet */
+  cx.fillStyle='#050505';
+  cx.fillRect(0,0,S,S);
+
+  /* Face — warm off-white, inset with rounded corners */
+  const pad=14, rad=36;
+  const g=cx.createLinearGradient(pad,pad,pad,S-pad);
+  g.addColorStop(0,'#f8f4ee');
+  g.addColorStop(1,'#e8e3dc');
+  cx.fillStyle=g;
+  rrect(cx,pad,pad,S-pad*2,S-pad*2,rad);
+  cx.fill();
+
+  /* Thin inner bevel line */
+  cx.strokeStyle='rgba(0,0,0,0.08)';
+  cx.lineWidth=1.5;
+  rrect(cx,pad+4,pad+4,S-pad*2-8,S-pad*2-8,rad-4);
+  cx.stroke();
+
+  /* Pips */
+  const scale=S/256;
+  PIP_MAPS[n].forEach(([px,py])=>{
+    const x=px*scale, y=py*scale, r=19*scale;
+    /* recessed shadow */
+    cx.save();
+    cx.shadowColor='rgba(0,0,0,0.35)';
+    cx.shadowBlur=4*scale;
+    cx.shadowOffsetY=2*scale;
+    /* pip gradient — shiny dome */
+    const pg=cx.createRadialGradient(x-r*.3,y-r*.35,r*.05,x,y,r);
+    pg.addColorStop(0,'#3a3a3a');
+    pg.addColorStop(.55,'#111111');
+    pg.addColorStop(1,'#050505');
+    cx.fillStyle=pg;
+    cx.beginPath();
+    cx.arc(x,y,r,0,Math.PI*2);
+    cx.fill();
+    cx.restore();
+    /* specular highlight */
+    const hl=cx.createRadialGradient(x-r*.28,y-r*.3,0,x-r*.2,y-r*.2,r*.45);
+    hl.addColorStop(0,'rgba(255,255,255,0.25)');
+    hl.addColorStop(1,'rgba(255,255,255,0)');
+    cx.fillStyle=hl;
+    cx.beginPath();
+    cx.arc(x,y,r,0,Math.PI*2);
+    cx.fill();
+  });
+
+  const tex=new THREE.CanvasTexture(cv);
+  tex.anisotropy=8;
+  return tex;
+}
+
+/* ─── Three.js scene ─── */
+const W=innerWidth, H=innerHeight;
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(W,H);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding;
+document.body.prepend(renderer.domElement);
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x0b0b0b);
+scene.fog=new THREE.FogExp2(0x0b0b0b,.07);
+
+const camera=new THREE.PerspectiveCamera(36,W/H,.1,100);
+camera.position.set(0,3.2,6.5);
+camera.lookAt(0,0,0);
+
+/* Lights */
+const amb=new THREE.AmbientLight(0xffffff,.55);
+scene.add(amb);
+
+const key=new THREE.DirectionalLight(0xffffff,1.6);
+key.position.set(5,9,6);
+key.castShadow=true;
+key.shadow.mapSize.set(2048,2048);
+key.shadow.camera.left=-4; key.shadow.camera.right=4;
+key.shadow.camera.top=4; key.shadow.camera.bottom=-4;
+key.shadow.bias=-.001;
+scene.add(key);
+
+const rim=new THREE.DirectionalLight(0xffffff,.35);
+rim.position.set(-6,1,-4);
+scene.add(rim);
+
+const fill=new THREE.PointLight(0xffffff,.2,20);
+fill.position.set(0,6,0);
+scene.add(fill);
+
+/* Floor */
+const floor=new THREE.Mesh(
+  new THREE.PlaneGeometry(50,50),
+  new THREE.ShadowMaterial({opacity:.45})
+);
+floor.rotation.x=-Math.PI/2;
+floor.position.y=-1.1;
+floor.receiveShadow=true;
+scene.add(floor);
+
+/* ─── Dice mesh ─── */
+const SZ=1.7;
+const diceGeo=new THREE.BoxGeometry(SZ,SZ,SZ);
+
+/* BoxGeometry face order: +X,-X,+Y,-Y,+Z,-Z → map to dice faces 3,4,1,6,2,5 */
+const FACE_ORDER=[3,4,1,6,2,5];
+const materials=FACE_ORDER.map(n=>new THREE.MeshStandardMaterial({
+  map:makeFaceTex(n),
+  roughness:.12,
+  metalness:.0,
+}));
+
+const dice=new THREE.Mesh(diceGeo,materials);
+dice.castShadow=true;
+scene.add(dice);
+
+/* Black edge lines */
+const edgesGeo=new THREE.EdgesGeometry(diceGeo);
+const edgesMat=new THREE.LineBasicMaterial({color:0x000000,linewidth:1});
+const edgeLines=new THREE.LineSegments(edgesGeo,edgesMat);
+dice.add(edgeLines);
+
+/* ─── Face-toward-camera Euler rotations ─── */
+// BoxGeometry face order: +X=3, -X=4, +Y=1, -Y=6, +Z=2, -Z=5
+// Camera is on the +Z side, so we rotate each face to point toward +Z.
+const FACE_ROT={
+  1:[ Math.PI/2,  0,          0],  // +Y → +Z  (rotate X +90°)
+  2:[ 0,          0,          0],  // +Z already faces camera
+  3:[ 0,         -Math.PI/2,  0],  // +X → +Z  (rotate Y −90°)
+  4:[ 0,          Math.PI/2,  0],  // −X → +Z  (rotate Y +90°)
+  5:[ 0,          Math.PI,    0],  // −Z → +Z  (rotate Y 180°)
+  6:[-Math.PI/2,  0,          0],  // −Y → +Z  (rotate X −90°)
+};
+
+/* ─── Particles ─── */
+const parts=[];
+function burst(x,y,z){
+  for(let i=0;i<18;i++){
+    const r=.02+Math.random()*.035;
+    const m=new THREE.Mesh(
+      new THREE.SphereGeometry(r,5,5),
+      new THREE.MeshBasicMaterial({color:Math.random()>.4?0xffffff:0x888888,transparent:true,opacity:1})
+    );
+    m.position.set(x,y,z);
+    scene.add(m);
+    parts.push({
+      m,
+      vx:(Math.random()-.5)*.18,
+      vy:Math.random()*.22+.1,
+      vz:(Math.random()-.5)*.18,
+      life:1
+    });
+  }
+}
+function tickParts(){
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i];
+    p.life-=.022; p.vy-=.014;
+    p.m.position.x+=p.vx;
+    p.m.position.y+=p.vy;
+    p.m.position.z+=p.vz;
+    p.m.material.opacity=Math.max(0,p.life);
+    if(p.life<=0){scene.remove(p.m);parts.splice(i,1);}
+  }
+}
+
+/* ─── State machine ─── */
+const S={INTRO:0,IDLE:1,ROLLING:2};
+let state=S.INTRO;
+let stateT=0; // normalized [0..1]
+let stateStart=0;
+let INTRO_DUR=1100;
+let ROLL_DUR=2400;
+
+let rolling=false;
+let curResult=1;
+let rollCount=0; let sumRolls=0; let highRoll=0;
+
+/* Roll start / end euler (accumulated) */
+let startEuler={x:0,y:0,z:0};
+let endEuler  ={x:0,y:0,z:0};
+
+/* Idle camera orbit */
+let orbitAngle=0;
+const CAM_R=6.5, CAM_Y=3.2;
+let idleSince=-Infinity;  // pause orbit 2 s after roll lands
+
+/* Camera shake */
+let shake=0;
+
+/* UI refs */
+const svRolls=document.getElementById('sv-rolls');
+const svLast =document.getElementById('sv-last');
+const svAvg  =document.getElementById('sv-avg');
+const svHigh =document.getElementById('sv-high');
+const rNum   =document.getElementById('result-num');
+const rTag   =document.getElementById('result-tag');
+const rBtn   =document.getElementById('roll-btn');
+const histEl =document.getElementById('history');
+const faceBar=document.getElementById('face-bar');
+
+function setFaceIndicator(n){
+  for(let i=1;i<=6;i++)
+    document.getElementById('fd'+i).classList.toggle('active',i===n);
+}
+
+function showResult(n){
+  rNum.textContent=n;
+  rNum.classList.add('show');
+  rTag.classList.add('show');
+  faceBar.classList.add('show');
+  setFaceIndicator(n);
+}
+
+function hideResult(){
+  rNum.classList.remove('show');
+  rTag.classList.remove('show');
+  faceBar.classList.remove('show');
+}
+
+function addHistory(n){
+  const d=document.createElement('div');
+  d.className='hp fresh'; d.textContent=n;
+  histEl.prepend(d);
+  setTimeout(()=>d.classList.remove('fresh'),60);
+  while(histEl.children.length>9) histEl.removeChild(histEl.lastChild);
+}
+
+function updateStats(){
+  rollCount++;
+  sumRolls+=curResult;
+  if(curResult>highRoll) highRoll=curResult;
+  svRolls.textContent=rollCount;
+  svLast.textContent=curResult;
+  svAvg.textContent=(sumRolls/rollCount).toFixed(1);
+  svHigh.textContent=highRoll;
+}
+
+/* ─── Roll trigger ─── */
+function doRoll(){
+  if(rolling || state===S.INTRO) return;
+  rolling=true;
+  state=S.ROLLING;
+  stateStart=performance.now();
+
+  curResult=Math.floor(Math.random()*6)+1;
+
+  hideResult();
+  rBtn.disabled=true;
+
+  startEuler={x:dice.rotation.x,y:dice.rotation.y,z:dice.rotation.z};
+  const [fx,fy,fz]=FACE_ROT[curResult];
+  const spx=(Math.floor(Math.random()*4)+4)*Math.PI*2;
+  const spy=(Math.floor(Math.random()*4)+4)*Math.PI*2;
+  const spz=(Math.floor(Math.random()*3)+3)*Math.PI*2;
+  endEuler={x:fx+spx, y:fy+spy, z:fz+spz};
+}
+
+rBtn.addEventListener('click',doRoll);
+document.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();doRoll();}});
+
+/* Click/tap on dice */
+const ray=new THREE.Raycaster();
+const mouse=new THREE.Vector2();
+renderer.domElement.addEventListener('click',e=>{
+  mouse.x=(e.clientX/innerWidth)*2-1;
+  mouse.y=-(e.clientY/innerHeight)*2+1;
+  ray.setFromCamera(mouse,camera);
+  if(ray.intersectObject(dice).length>0) doRoll();
+});
+
+/* ─── MAIN LOOP ─── */
+let prev=performance.now();
+
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt=Math.min((now-prev)/1000,.05);
+  prev=now;
+
+  if(state===S.INTRO){
+    const t=clamp((now-stateStart)/INTRO_DUR,0,1);
+    const e=easeOutBack(t);
+    dice.position.y=lerp(9,0,e);
+    dice.rotation.x=lerp(2.5,FACE_ROT[1][0],e);
+    dice.rotation.y=lerp(1.2,FACE_ROT[1][1],e);
+    dice.rotation.z=lerp(-.8,FACE_ROT[1][2],e);
+    if(t>=1){
+      state=S.IDLE;
+      dice.position.y=0;
+      dice.rotation.set(...FACE_ROT[1]);
+      rBtn.disabled=false;
+      showResult(1);
+      setFaceIndicator(1);
+    }
+  } else if(state===S.ROLLING){
+    const elapsed=now-stateStart;
+    const t=clamp(elapsed/ROLL_DUR,0,1);
+    const e=easeInOutQuart(t);
+
+    dice.rotation.x=lerp(startEuler.x,endEuler.x,e);
+    dice.rotation.y=lerp(startEuler.y,endEuler.y,e);
+    dice.rotation.z=lerp(startEuler.z,endEuler.z,e);
+
+    /* trajectory: arc up then bounce settle */
+    if(t<.45){
+      dice.position.y=Math.sin((t/.45)*Math.PI)*1.6;
+    } else {
+      const t2=(t-.45)/.55;
+      dice.position.y=easeOutBounce(1-t2)*0.5*(1-t2);
+    }
+
+    shake=.05*(1-e);
+
+    if(t>=1){
+      rolling=false;
+      state=S.IDLE;
+      dice.position.y=0;
+      dice.rotation.set(...FACE_ROT[curResult]);
+      orbitAngle=0;          // camera returns to front (0,CAM_Y,CAM_R)
+      idleSince=now;         // pause orbit for 2 s so result is visible
+      burst(0,-.2,0);
+      updateStats();
+      addHistory(curResult);
+      setTimeout(()=>{
+        showResult(curResult);
+        rBtn.disabled=false;
+      },120);
+    }
+  } else {
+    /* IDLE: hold front for 2 s after a roll, then slowly orbit */
+    const holdMs=2000;
+    if(now-idleSince>holdMs){
+      orbitAngle+=dt*.18;
+    }
+    camera.position.x=Math.sin(orbitAngle)*CAM_R;
+    camera.position.z=Math.cos(orbitAngle)*CAM_R;
+    camera.position.y=CAM_Y+Math.sin(orbitAngle*.4)*.3;
+    camera.lookAt(0,0,0);
+    shake*=.88;
+  }
+
+  /* Camera shake during roll */
+  if(state===S.ROLLING){
+    camera.position.set(
+      Math.sin(orbitAngle)*CAM_R+(Math.random()-.5)*shake,
+      CAM_Y+(Math.random()-.5)*shake*.4,
+      Math.cos(orbitAngle)*CAM_R+(Math.random()-.5)*shake
+    );
+    camera.lookAt(0,0,0);
+  }
+
+  tickParts();
+  renderer.render(scene,camera);
+}
+
+/* ─── Kick off ─── */
+stateStart=performance.now();
+rBtn.disabled=true;
+dice.position.y=9;
+dice.rotation.set(2.5,1.2,-.8);
+requestAnimationFrame(animate);
+
+/* ─── Resize ─── */
+window.addEventListener('resize',()=>{
+  const w=innerWidth,h=innerHeight;
+  camera.aspect=w/h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w,h);
+});
+</script>
+</body>
+</html>

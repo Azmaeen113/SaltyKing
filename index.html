@@ -1,0 +1,2128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Salty Kingdom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Pirata+One&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --gold:#FFD700;--gold2:#FFA500;--gold3:#B8860B;
+  --navy:#0a1628;--navy2:#112244;--navy3:#1a3366;
+  --ocean:#1a6e8e;--ocean2:#0d4d6b;
+  --red:#c0392b;--red2:#8b0000;
+  --purple:#6a0dad;--purple2:#4a0080;
+  --teal:#0e6655;--teal2:#0a4d40;
+  --bg:#07101f;
+  --text:#f5e6c8;
+  --text2:#c8a96e;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Cinzel',serif;color:var(--text);}
+#app{width:100%;height:100%;position:relative;overflow:hidden;}
+
+/* SCREENS */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;}
+.screen.active{display:flex;}
+
+/* ===== SPLASH ===== */
+#splash{background:linear-gradient(180deg,#0d2137 0%,#071525 60%,#030d18 100%);align-items:center;justify-content:center;}
+#splash .stars{position:absolute;inset:0;overflow:hidden;}
+#splash .star{position:absolute;background:#fff;border-radius:50%;animation:twinkle 3s infinite alternate;}
+@keyframes twinkle{0%{opacity:.2;}100%{opacity:1;}}
+#splash .ocean-bg{position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(180deg,transparent,#0a2a3d,#051520);}
+#splash .splash-content{position:relative;z-index:2;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;}
+#splash .logo-shield{width:260px;height:auto;filter:drop-shadow(0 0 30px rgba(255,215,0,0.6));}
+.logo-img{width:240px;display:block;margin:0 auto;}
+#splash .subtitle{font-family:'Pirata One',cursive;font-size:18px;color:var(--gold2);letter-spacing:4px;text-shadow:0 0 20px rgba(255,165,0,0.8);}
+#splash .play-btn{margin-top:16px;background:linear-gradient(135deg,#FFD700,#FF8C00,#FFD700);border:none;border-radius:50px;padding:16px 60px;font-family:'Cinzel Decorative',serif;font-size:20px;font-weight:700;color:#1a0a00;cursor:pointer;box-shadow:0 0 30px rgba(255,165,0,0.7),inset 0 1px 0 rgba(255,255,255,0.4);animation:pulse-glow 2s infinite;}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(255,165,0,0.6),inset 0 1px 0 rgba(255,255,255,0.4);}50%{box-shadow:0 0 50px rgba(255,165,0,1),inset 0 1px 0 rgba(255,255,255,0.4);}}
+#splash .social-row{display:flex;gap:12px;margin-top:8px;}
+#splash .soc-btn{width:44px;height:44px;border-radius:50%;border:2px solid var(--gold3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;background:rgba(0,0,0,0.4);}
+
+/* ===== GAME SCREEN ===== */
+#game{background:#07101f;flex-direction:column;}
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:linear-gradient(180deg,rgba(0,0,30,0.95),rgba(0,0,20,0.8));border-bottom:1px solid var(--gold3);flex-shrink:0;z-index:10;}
+.top-bar .player-info{display:flex;align-items:center;gap:8px;}
+.avatar{width:40px;height:40px;border-radius:50%;border:2px solid var(--gold);overflow:hidden;background:var(--navy2);display:flex;align-items:center;justify-content:center;font-size:20px;}
+.player-data{display:flex;flex-direction:column;}
+.player-name{font-size:11px;font-weight:700;color:var(--gold);font-family:'Cinzel',serif;}
+.player-lvl{font-size:9px;color:var(--text2);margin-top:1px;}
+.coins-display{display:flex;align-items:center;gap:4px;background:rgba(0,0,0,0.5);border:1px solid var(--gold3);border-radius:20px;padding:3px 8px;}
+.coins-display .coin-icon{font-size:14px;}
+.coins-display span{font-size:12px;font-weight:700;color:var(--gold);font-family:'Cinzel',serif;}
+.top-title{text-align:center;}
+.top-title h1{font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold);text-shadow:0 0 10px rgba(255,215,0,0.5);line-height:1.1;}
+.top-title .tagline{font-size:8px;color:var(--text2);letter-spacing:2px;}
+.booty-chest{display:flex;flex-direction:column;align-items:flex-end;gap:2px;}
+.booty-label{font-size:9px;color:var(--gold2);font-weight:700;letter-spacing:1px;}
+.booty-count{font-size:11px;color:var(--text);font-weight:700;}
+.booty-bar{width:60px;height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;}
+.booty-fill{height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:3px;transition:width 0.5s;}
+
+/* REF BONUS BAR */
+.ref-bar{display:flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(106,13,173,0.2);border-bottom:1px solid rgba(106,13,173,0.4);flex-shrink:0;}
+.ref-bar .ref-icon{font-size:14px;}
+.ref-bar .ref-text{font-size:10px;color:var(--text2);}
+.ref-bar .ref-val{font-size:11px;font-weight:700;color:var(--gold);}
+.ref-bar .ref-btn{margin-left:auto;background:linear-gradient(135deg,var(--purple),var(--purple2));border:none;border-radius:8px;padding:3px 10px;font-size:9px;color:white;cursor:pointer;font-family:'Cinzel',serif;}
+
+/* BOARD AREA */
+.board-area{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.board-bg{position:absolute;inset:0;background:radial-gradient(ellipse at center,#1a5276 0%,#0d3d5c 30%,#071e2e 70%,#030f1a 100%);}
+.ocean-shine{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(26,110,142,0.3) 0%,transparent 65%);}
+
+/* ISLAND */
+.island-container{position:absolute;top:50%;left:50%;transform:translate(-50%,-52%);z-index:2;}
+.island-svg{width:200px;height:200px;filter:drop-shadow(0 4px 20px rgba(255,215,0,0.3));}
+
+/* BOARD TRACK */
+.board-track{position:absolute;inset:0;z-index:3;}
+.tile{position:absolute;width:44px;height:44px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.15s;border:2px solid rgba(255,255,255,0.15);overflow:hidden;}
+.tile:hover{transform:scale(1.08);}
+.tile.coin{background:linear-gradient(135deg,#3d2800,#5c3a00);border-color:var(--gold3);}
+.tile.chest{background:linear-gradient(135deg,#3d0a00,#6b1500);border-color:#c0392b;}
+.tile.multiplier{background:linear-gradient(135deg,#003d4d,#006680);border-color:#00bcd4;}
+.tile.skull{background:linear-gradient(135deg,#1a0000,#3d0000);border-color:#8b0000;}
+.tile.crown{background:linear-gradient(135deg,#2d004d,#5a0080);border-color:#9b59b6;}
+.tile.wheel{background:linear-gradient(135deg,#1a2800,#2e4a00);border-color:#4caf50;}
+.tile.start{background:linear-gradient(135deg,#3d0000,#8b1500);border-color:#ff6b35;}
+.tile-icon{font-size:20px;line-height:1;}
+.tile-label{font-size:7px;color:rgba(255,255,255,0.7);margin-top:1px;font-family:'Cinzel',serif;}
+.tile.player-here{box-shadow:0 0 0 3px #FFD700,0 0 20px rgba(255,215,0,0.8);animation:player-pulse 1s infinite alternate;}
+@keyframes player-pulse{0%{box-shadow:0 0 0 3px #FFD700,0 0 10px rgba(255,215,0,0.6);}100%{box-shadow:0 0 0 3px #FFD700,0 0 30px rgba(255,215,0,1);}}
+.player-token{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:18px;z-index:10;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));}
+
+/* BOTTOM BAR */
+.bottom-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px 12px;background:linear-gradient(0deg,rgba(0,0,30,0.98),rgba(0,0,20,0.85));border-top:1px solid var(--gold3);flex-shrink:0;}
+.energy-pill{display:flex;flex-direction:column;align-items:center;gap:2px;background:rgba(0,0,0,0.5);border:1px solid var(--gold3);border-radius:10px;padding:5px 10px;min-width:70px;}
+.energy-icon{font-size:16px;}
+.energy-count{font-size:10px;font-weight:700;color:var(--gold);}
+.energy-label{font-size:8px;color:var(--text2);}
+.roll-btn{background:linear-gradient(135deg,#c0392b,#8b0000,#c0392b);border:none;border-radius:14px;padding:12px 28px;font-family:'Cinzel Decorative',serif;font-size:16px;font-weight:700;color:white;cursor:pointer;box-shadow:0 4px 20px rgba(192,57,43,0.6),inset 0 1px 0 rgba(255,255,255,0.2);letter-spacing:1px;transition:transform 0.1s,box-shadow 0.1s;min-width:120px;position:relative;}
+.roll-btn:active{transform:scale(0.96);box-shadow:0 2px 10px rgba(192,57,43,0.4);}
+.roll-sub{display:block;font-size:8px;font-family:'Cinzel',serif;color:rgba(255,255,255,0.7);letter-spacing:2px;margin-top:2px;}
+.roll-btn.rolling{animation:shake 0.5s ease-in-out;}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-4px) rotate(-2deg);}40%{transform:translateX(4px) rotate(2deg);}60%{transform:translateX(-3px);}80%{transform:translateX(3px);}}
+.dice-side{display:flex;flex-direction:column;align-items:center;gap:2px;background:rgba(0,0,0,0.5);border:1px solid var(--gold3);border-radius:10px;padding:5px 10px;min-width:70px;cursor:pointer;}
+.dice-icon{font-size:22px;}
+
+/* OVERLAY */
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,0.75);z-index:50;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.overlay.hidden{display:none;}
+.modal{background:linear-gradient(135deg,#0d1f3d,#122244);border:2px solid var(--gold);border-radius:20px;padding:24px;max-width:320px;width:90%;text-align:center;position:relative;box-shadow:0 0 40px rgba(255,215,0,0.3);}
+.modal h2{font-family:'Cinzel Decorative',serif;font-size:18px;color:var(--gold);margin-bottom:8px;}
+.modal p{font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5;}
+.modal .reward-amount{font-size:36px;font-weight:700;color:var(--gold);font-family:'Cinzel',serif;text-shadow:0 0 20px rgba(255,215,0,0.8);margin:8px 0;}
+.modal .close-btn{background:linear-gradient(135deg,var(--gold2),var(--gold3));border:none;border-radius:10px;padding:10px 30px;font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:#1a0a00;cursor:pointer;width:100%;}
+.dice-result{font-size:60px;margin:8px 0;animation:dice-spin 0.5s ease-out;}
+@keyframes dice-spin{0%{transform:rotate(0deg) scale(0.5);opacity:0;}50%{transform:rotate(180deg) scale(1.3);}100%{transform:rotate(360deg) scale(1);opacity:1;}}
+
+/* NAV BAR */
+.nav-bar{display:flex;background:linear-gradient(0deg,#030d18,#07101f);border-top:1px solid rgba(255,215,0,0.2);flex-shrink:0;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;cursor:pointer;border:none;background:transparent;color:var(--text2);transition:color 0.2s;gap:2px;}
+.nav-btn.active{color:var(--gold);}
+.nav-btn .nav-icon{font-size:20px;}
+.nav-btn .nav-label{font-size:8px;font-family:'Cinzel',serif;letter-spacing:0.5px;}
+
+/* ===== LEADERBOARD ===== */
+#leaderboard-screen{background:linear-gradient(180deg,#07101f,#030d18);padding:0;flex-direction:column;}
+.lb-header{padding:16px 16px 8px;background:linear-gradient(180deg,rgba(0,0,30,0.95),transparent);border-bottom:1px solid var(--gold3);flex-shrink:0;}
+.lb-header h2{font-family:'Cinzel Decorative',serif;font-size:18px;color:var(--gold);text-align:center;}
+.lb-list{flex:1;overflow-y:auto;padding:8px 12px 12px;}
+.lb-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;margin-bottom:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);}
+.lb-item.top1{background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,165,0,0.1));border-color:var(--gold);}
+.lb-item.top2{background:linear-gradient(135deg,rgba(192,192,192,0.12),rgba(128,128,128,0.08));border-color:silver;}
+.lb-item.top3{background:linear-gradient(135deg,rgba(205,127,50,0.12),rgba(139,90,43,0.08));border-color:#cd7f32;}
+.lb-rank{font-size:16px;font-weight:700;color:var(--gold);font-family:'Cinzel',serif;min-width:30px;text-align:center;}
+.lb-avatar{font-size:24px;}
+.lb-info{flex:1;}
+.lb-name{font-size:13px;font-weight:700;color:var(--text);}
+.lb-coins{font-size:11px;color:var(--gold2);}
+.lb-badge{font-size:10px;color:var(--text2);}
+
+/* ===== RAIDS ===== */
+#raids-screen{background:linear-gradient(180deg,#07101f,#030d18);flex-direction:column;}
+.raids-header{padding:16px;border-bottom:1px solid var(--red2);background:linear-gradient(180deg,rgba(139,0,0,0.2),transparent);flex-shrink:0;}
+.raids-header h2{font-family:'Cinzel Decorative',serif;font-size:18px;color:#ff6b35;text-align:center;}
+.raids-header p{font-size:11px;color:var(--text2);text-align:center;margin-top:4px;}
+.raid-targets{flex:1;overflow-y:auto;padding:8px 12px 12px;}
+.raid-card{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;margin-bottom:8px;background:linear-gradient(135deg,rgba(139,0,0,0.15),rgba(80,0,0,0.1));border:1px solid rgba(192,57,43,0.3);cursor:pointer;transition:border-color 0.2s;}
+.raid-card:hover{border-color:var(--red);}
+.raid-avatar{font-size:28px;}
+.raid-info{flex:1;}
+.raid-name{font-size:13px;font-weight:700;color:var(--text);}
+.raid-coins{font-size:11px;color:var(--gold2);}
+.raid-chance{font-size:10px;color:var(--text2);}
+.raid-btn{background:linear-gradient(135deg,var(--red),var(--red2));border:none;border-radius:8px;padding:6px 14px;font-family:'Cinzel',serif;font-size:11px;color:white;cursor:pointer;}
+
+/* ===== REWARDS ===== */
+#rewards-screen{background:linear-gradient(180deg,#07101f,#030d18);flex-direction:column;}
+.rewards-header{padding:16px;border-bottom:1px solid var(--gold3);background:linear-gradient(180deg,rgba(255,215,0,0.1),transparent);flex-shrink:0;}
+.rewards-header h2{font-family:'Cinzel Decorative',serif;font-size:18px;color:var(--gold);text-align:center;}
+.rewards-content{flex:1;overflow-y:auto;padding:12px;}
+.daily-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px;}
+.day-card{border-radius:10px;padding:8px 4px;text-align:center;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);}
+.day-card.claimed{background:linear-gradient(135deg,rgba(0,100,0,0.3),rgba(0,60,0,0.2));border-color:#4caf50;}
+.day-card.today{background:linear-gradient(135deg,rgba(255,165,0,0.2),rgba(255,100,0,0.1));border-color:var(--gold);animation:pulse-border 1.5s infinite alternate;}
+@keyframes pulse-border{0%{border-color:var(--gold3);}100%{border-color:var(--gold);box-shadow:0 0 10px rgba(255,215,0,0.5);}}
+.day-num{font-size:9px;color:var(--text2);margin-bottom:3px;}
+.day-icon{font-size:20px;}
+.day-reward{font-size:8px;color:var(--gold);}
+.claim-btn{width:100%;background:linear-gradient(135deg,var(--gold2),var(--gold3));border:none;border-radius:10px;padding:10px;font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:#1a0a00;cursor:pointer;margin-bottom:12px;}
+.claim-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.section-title{font-family:'Cinzel',serif;font-size:12px;color:var(--gold2);margin-bottom:8px;letter-spacing:1px;}
+.booty-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.booty-card{border-radius:12px;padding:12px;text-align:center;background:linear-gradient(135deg,rgba(139,0,0,0.2),rgba(80,0,0,0.1));border:1px solid rgba(192,57,43,0.3);}
+.booty-card .bc-icon{font-size:28px;margin-bottom:4px;}
+.booty-card .bc-name{font-size:11px;color:var(--text);font-weight:700;}
+.booty-card .bc-val{font-size:10px;color:var(--gold2);margin-top:2px;}
+.booty-card .bc-btn{background:linear-gradient(135deg,var(--red),var(--red2));border:none;border-radius:6px;padding:4px 12px;font-size:10px;color:white;cursor:pointer;margin-top:6px;font-family:'Cinzel',serif;}
+
+/* ===== REFERRAL ===== */
+#referral-screen{background:linear-gradient(180deg,#07101f,#030d18);flex-direction:column;}
+.ref-header{padding:16px;border-bottom:1px solid var(--purple2);background:linear-gradient(180deg,rgba(106,13,173,0.15),transparent);flex-shrink:0;}
+.ref-header h2{font-family:'Cinzel Decorative',serif;font-size:18px;color:#b39ddb;text-align:center;}
+.ref-content{flex:1;overflow-y:auto;padding:12px;}
+.ref-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.ref-stat{text-align:center;padding:10px 6px;border-radius:10px;background:rgba(106,13,173,0.1);border:1px solid rgba(106,13,173,0.3);}
+.ref-stat .rs-val{font-size:20px;font-weight:700;color:var(--gold);font-family:'Cinzel',serif;}
+.ref-stat .rs-lbl{font-size:9px;color:var(--text2);margin-top:2px;}
+.ref-code-box{background:rgba(0,0,0,0.4);border:1px solid var(--gold3);border-radius:12px;padding:16px;text-align:center;margin-bottom:12px;}
+.ref-code-box p{font-size:11px;color:var(--text2);margin-bottom:8px;}
+.ref-code{font-size:20px;font-weight:700;color:var(--gold);letter-spacing:4px;font-family:'Cinzel',serif;}
+.ref-copy-btn{background:linear-gradient(135deg,var(--purple),var(--purple2));border:none;border-radius:8px;padding:8px 20px;font-family:'Cinzel',serif;font-size:12px;color:white;cursor:pointer;margin-top:10px;width:100%;}
+.ref-list-title{font-size:12px;color:var(--text2);margin-bottom:8px;}
+.ref-friend{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.04);margin-bottom:4px;border:1px solid rgba(255,255,255,0.06);}
+.ref-friend .rf-av{font-size:22px;}
+.ref-friend .rf-info{flex:1;}
+.ref-friend .rf-name{font-size:12px;color:var(--text);}
+.ref-friend .rf-date{font-size:9px;color:var(--text2);}
+.ref-friend .rf-bonus{font-size:11px;color:var(--gold);font-weight:700;}
+
+/* COIN ANIMATION */
+.coin-fly{position:fixed;pointer-events:none;font-size:24px;z-index:999;animation:coin-fly-up 1s ease-out forwards;}
+@keyframes coin-fly-up{0%{transform:translateY(0) scale(1);opacity:1;}100%{transform:translateY(-100px) scale(0.5);opacity:0;}}
+
+/* DICE ROLLING OVERLAY */
+#dice-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:100;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+#dice-overlay.show{display:flex;}
+#dice-big{font-size:120px;animation:dice-roll-anim 0.6s ease-out;}
+@keyframes dice-roll-anim{0%{transform:rotate(0) scale(0.3);opacity:0;}40%{transform:rotate(540deg) scale(1.4);}70%{transform:rotate(700deg) scale(0.9);}100%{transform:rotate(720deg) scale(1);opacity:1;}}
+#dice-num-text{font-family:'Cinzel Decorative',serif;font-size:48px;color:var(--gold);opacity:0;transition:opacity 0.3s;}
+#dice-num-text.show{opacity:1;}
+
+/* TOAST */
+#toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);border:1px solid var(--gold);color:var(--gold);border-radius:20px;padding:8px 20px;font-size:13px;font-family:'Cinzel',serif;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;}
+
+/* SCROLL */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.3);border-radius:2px;}
+
+/* ADMIN */
+#admin-screen{background:linear-gradient(180deg,#07101f,#030d18);flex-direction:column;}
+.admin-header{padding:12px 16px;border-bottom:1px solid var(--gold3);flex-shrink:0;}
+.admin-header h2{font-family:'Cinzel Decorative',serif;font-size:16px;color:var(--gold);}
+.admin-content{flex:1;overflow-y:auto;padding:12px;}
+.admin-section{margin-bottom:16px;}
+.admin-section-title{font-size:11px;color:var(--gold2);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;}
+.admin-stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
+.admin-stat{padding:10px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);}
+.admin-stat .as-val{font-size:18px;font-weight:700;color:var(--gold);font-family:'Cinzel',serif;}
+.admin-stat .as-lbl{font-size:9px;color:var(--text2);}
+.admin-control{display:flex;gap:8px;margin-bottom:8px;}
+.admin-control input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 10px;color:white;font-family:'Cinzel',serif;font-size:12px;}
+.admin-control button{background:linear-gradient(135deg,var(--gold2),var(--gold3));border:none;border-radius:8px;padding:8px 14px;font-family:'Cinzel',serif;font-size:11px;color:#1a0a00;cursor:pointer;}
+
+/* Video background for non-board/non-splash pages */
+.video-bg-screen{
+  position:relative;
+  overflow:hidden;
+  min-height:100%;
+  box-sizing:border-box;
+  padding-top:0;
+}
+.video-bg-screen .screen-bg-video{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:0;
+  pointer-events:none;
+}
+.video-bg-screen .screen-bg-video video{
+  width:100%;
+  height:100%;
+  min-width:100%;
+  min-height:100%;
+  object-fit:cover;
+  object-position:center;
+  filter:saturate(1.05) contrast(1.02);
+}
+.video-bg-screen .screen-bg-video::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,rgba(4,10,25,.58),rgba(4,10,25,.66));
+}
+.video-bg-screen > :not(.screen-bg-video){
+  position:relative;
+  z-index:1;
+}
+.video-bg-screen > .nav-bar{
+  margin-top:auto;
+}
+
+#leaderboard-screen,
+#raids-screen,
+#rewards-screen,
+#referral-screen,
+#admin-screen{
+  background:transparent !important;
+}
+
+/* 20% empty top area for video pages without hiding bottom nav */
+.video-bg-screen .lb-header,
+.video-bg-screen .raids-header,
+.video-bg-screen .rewards-header,
+.video-bg-screen .ref-header,
+.video-bg-screen .admin-header{
+  margin-top:20vh;
+}
+
+/* Keep bottom nav visible (especially Ranks) */
+#leaderboard-screen .lb-list,
+#raids-screen .raid-targets,
+#rewards-screen .rewards-content,
+#referral-screen .ref-content,
+#admin-screen .admin-content{
+  min-height:0;
+}
+
+#leaderboard-screen .nav-bar{
+  position:relative;
+  z-index:3;
+}
+
+/* Hard-fix ranks: nav always visible + list always scrollable */
+#leaderboard-screen.video-bg-screen{
+  position:relative;
+  min-height:100dvh;
+}
+#leaderboard-screen.video-bg-screen .lb-header{
+  margin-top:20vh;
+}
+#leaderboard-screen.video-bg-screen .lb-list{
+  height:calc(100dvh - 20vh - 66px - 86px - env(safe-area-inset-bottom, 0px));
+  min-height:0;
+  overflow-y:auto;
+  padding-bottom:18px;
+}
+#leaderboard-screen.video-bg-screen .nav-bar{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:60;
+  margin-top:0 !important;
+  min-height:86px;
+  padding-bottom:max(6px, env(safe-area-inset-bottom, 0px));
+}
+
+/* PIRATE SHIP */
+.pirate-ship{position:absolute;font-size:40px;opacity:0.5;animation:sail 20s linear infinite;}
+@keyframes sail{0%{transform:translateX(-80px);left:-5%;}100%{transform:translateX(0);left:105%;}}
+.pirate-ship2{animation-delay:-10s;top:20%;}
+
+/* WAVES */
+.wave-line{position:absolute;height:2px;background:linear-gradient(90deg,transparent,rgba(26,110,142,0.4),transparent);animation:wave-move 4s linear infinite;}
+@keyframes wave-move{0%{transform:translateX(-100%);opacity:0;}50%{opacity:1;}100%{transform:translateX(100%);opacity:0;}}
+
+/* =========================
+   CINEMATIC 2.5D OVERHAUL
+   ========================= */
+html,body{
+  background:
+    radial-gradient(80% 60% at 50% 12%, rgba(77,146,206,.22), transparent 60%),
+    linear-gradient(180deg,#041225 0%, #030b18 100%);
+}
+
+:root{
+  --panel-bg:linear-gradient(180deg,rgba(8,16,38,.96),rgba(4,10,24,.92));
+  --wood:linear-gradient(180deg,#4e2a11 0%, #3a1e0a 48%, #2c1506 100%);
+  --brass:linear-gradient(180deg,#ffea9d 0%, #f9b944 36%, #c47a1a 80%, #7c4a10 100%);
+  --royal-blue:#0f3f7a;
+  --ocean-deep:#07203a;
+  --ocean-mid:#0b4e73;
+  --ocean-glow:#18bdf4;
+}
+
+.screen{
+  perspective:1000px;
+}
+
+#splash{
+  background:
+    radial-gradient(80% 55% at 50% 20%, rgba(76,153,255,.2), transparent 60%),
+    linear-gradient(180deg,#062349 0%, #031227 100%);
+}
+
+#splash::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image:
+    linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.55)),
+    url("F36E43EA-71C1-4976-BD54-CB2FA42DEE2F.png");
+  background-size:cover;
+  background-position:center;
+  opacity:.55;
+  pointer-events:none;
+}
+
+#splash .splash-content{
+  width:min(95vw,420px);
+  max-height:calc(100dvh - 20px);
+  overflow-y:auto;
+  padding:14px 12px 14px;
+  border-radius:30px;
+  border:1px solid rgba(255,209,107,.45);
+  background:
+    linear-gradient(180deg,rgba(11,22,48,.62),rgba(7,14,30,.84));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.22),
+    0 20px 40px rgba(0,0,0,.5),
+    0 0 55px rgba(255,189,74,.22);
+  gap:10px;
+}
+
+.logo-img{
+  width:min(74vw,250px);
+  height:156px;
+  object-fit:cover;
+  object-position:center 10%;
+  border-radius:16px;
+  border:1px solid rgba(255,203,101,.35);
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+.hero-king{
+  width:min(58vw,178px);
+  height:160px;
+  border-radius:26px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.1)),
+    url("2F902437-1FF1-41F1-AD8C-7EFD3E79F688.jpeg");
+  background-size:cover;
+  background-position:center 58%;
+  border:2px solid rgba(255,201,100,.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.3),
+    0 14px 35px rgba(0,0,0,.55),
+    0 0 32px rgba(255,170,56,.35);
+}
+
+#splash .subtitle{
+  font-size:16px;
+  letter-spacing:2.8px;
+  color:#ffd179;
+}
+
+#splash .play-btn{
+  position:relative;
+  z-index:3;
+  width:min(80vw,270px);
+  padding:14px 20px;
+  border-radius:18px;
+  border:1px solid rgba(255,220,136,.7);
+  background:
+    radial-gradient(120% 120% at 50% 10%, rgba(255,245,188,.4), transparent 34%),
+    linear-gradient(180deg,#f24f26 0%, #c92b10 46%, #7f1808 100%);
+  color:#ffecc4;
+  text-shadow:0 2px 6px rgba(0,0,0,.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.45),
+    inset 0 -8px 16px rgba(0,0,0,.25),
+    0 12px 22px rgba(0,0,0,.38),
+    0 0 36px rgba(255,120,41,.42);
+  touch-action:manipulation;
+}
+
+#splash .social-row{gap:10px}
+#splash .soc-btn{
+  width:48px;height:48px;
+  background:var(--wood);
+  border:1px solid rgba(255,198,103,.55);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 8px 14px rgba(0,0,0,.35);
+}
+
+#game{
+  background:linear-gradient(180deg,#08223d 0%, #041326 100%);
+}
+
+.top-bar{
+  background:var(--panel-bg);
+  border-bottom:1px solid rgba(255,191,92,.45);
+  box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.1);
+}
+
+.avatar{
+  width:44px;height:44px;
+  border:2px solid rgba(255,205,114,.78);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35), 0 5px 12px rgba(0,0,0,.45);
+  background:
+    url("2F902437-1FF1-41F1-AD8C-7EFD3E79F688.jpeg") center/cover no-repeat,
+    #132947;
+}
+
+.top-title h1{
+  font-size:15px;
+  background:var(--brass);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  text-shadow:0 0 18px rgba(255,186,83,.4);
+}
+
+.coins-display,.booty-chest,.ref-bar,.energy-pill,.dice-side{
+  background:linear-gradient(180deg,rgba(16,28,56,.76),rgba(8,15,35,.92));
+  border-color:rgba(255,190,93,.52);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 6px 14px rgba(0,0,0,.3);
+}
+
+.board-area{
+  overflow:hidden;
+}
+
+.board-bg{
+  background:
+    radial-gradient(circle at 50% 50%, rgba(24,190,244,.27) 0%, transparent 52%),
+    radial-gradient(110% 90% at 50% 40%, rgba(76,170,228,.26), rgba(5,26,48,.96) 60%),
+    url("712B5660-75A6-4F62-8306-EB641B81BBB3.png");
+  background-size:cover;
+  background-position:center;
+  filter:saturate(1.15) contrast(1.05);
+}
+
+.board-bg::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(80% 50% at 50% 52%, rgba(255,235,165,.08), transparent 70%),
+    repeating-linear-gradient(120deg, rgba(255,255,255,.04) 0 2px, transparent 2px 26px);
+  pointer-events:none;
+}
+
+.ocean-shine{
+  background:
+    radial-gradient(ellipse at 50% 45%,rgba(71,221,255,.25) 0%,transparent 66%),
+    radial-gradient(ellipse at 50% 50%,rgba(255,225,140,.13) 0%,transparent 55%);
+}
+
+.island-container{
+  transform:translate(-50%,-50%);
+  width:260px;
+  height:260px;
+  border-radius:50%;
+  z-index:2;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255,224,140,.44), transparent 45%),
+    url("F36E43EA-71C1-4976-BD54-CB2FA42DEE2F.png");
+  background-size:cover;
+  background-position:center 52%;
+  border:2px solid rgba(255,201,104,.45);
+  box-shadow:
+    0 0 0 8px rgba(0,0,0,.18),
+    0 12px 32px rgba(0,0,0,.45),
+    0 0 45px rgba(255,193,73,.35);
+}
+
+.island-svg{display:none;}
+
+.board-track{
+  transform-style:preserve-3d;
+}
+
+.tile{
+  width:50px;height:50px;
+  border-radius:13px;
+  border:1px solid rgba(255,216,144,.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.27),
+    inset 0 -8px 14px rgba(0,0,0,.22),
+    0 5px 10px rgba(0,0,0,.35);
+  transform:translateZ(12px);
+}
+
+.tile:hover{
+  transform:translateZ(18px) scale(1.08);
+}
+
+.tile.coin{background:linear-gradient(180deg,#84561f 0%, #643d13 100%);}
+.tile.chest{background:linear-gradient(180deg,#8f3d1f 0%, #62230f 100%);}
+.tile.multiplier{background:linear-gradient(180deg,#165d88 0%, #0e4160 100%);}
+.tile.skull{background:linear-gradient(180deg,#7a2d19 0%, #541d10 100%);}
+.tile.crown{background:linear-gradient(180deg,#6d4a9f 0%, #4a326e 100%);}
+.tile.wheel{background:linear-gradient(180deg,#3a5a84 0%, #2a4062 100%);}
+.tile.start{background:linear-gradient(180deg,#914928 0%, #6f3117 100%);}
+
+.tile .tile-art{
+  width:26px;
+  height:26px;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));
+}
+
+.tile-label{
+  font-size:7px;
+  color:#f9d799;
+  letter-spacing:.3px;
+}
+
+.tile.player-here{
+  box-shadow:
+    0 0 0 2px #ffdd85,
+    0 0 0 4px rgba(255,207,97,.3),
+    0 0 22px rgba(255,194,72,.8);
+}
+
+.player-token{
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  top:-10px;
+  border:1px solid rgba(255,218,129,.85);
+  background:
+    url("2F902437-1FF1-41F1-AD8C-7EFD3E79F688.jpeg") center/cover no-repeat,
+    #17335a;
+}
+
+.bottom-bar{
+  background:var(--panel-bg);
+  border-top:1px solid rgba(255,190,93,.45);
+}
+
+.roll-btn{
+  border:1px solid rgba(255,215,134,.72);
+  border-radius:14px;
+  background:
+    radial-gradient(120% 100% at 50% 0%, rgba(255,246,191,.38), transparent 36%),
+    linear-gradient(180deg,#de4d28 0%, #bb2c12 50%, #7d180a 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.38),
+    inset 0 -8px 10px rgba(0,0,0,.25),
+    0 10px 20px rgba(0,0,0,.32),
+    0 0 26px rgba(255,106,54,.38);
+}
+
+.roll-sub{
+  color:rgba(255,233,181,.75);
+}
+
+.nav-bar{
+  background:
+    linear-gradient(180deg,rgba(16,28,56,.86),rgba(7,14,33,.94));
+  border-top:1px solid rgba(255,188,90,.4);
+}
+
+.nav-btn.active{
+  color:#ffcf76;
+  text-shadow:0 0 14px rgba(255,181,69,.42);
+}
+
+#splash .splash-content::-webkit-scrollbar{
+  width:0;
+  height:0;
+}
+
+/* Local sprite-sheet based ships */
+.ship-sprite{
+  background-image:url("2F902437-1FF1-41F1-AD8C-7EFD3E79F688.jpeg");
+  background-size:cover;
+  background-repeat:no-repeat;
+  border:1px solid rgba(255,194,103,.35);
+  border-radius:14px;
+  box-shadow:0 8px 16px rgba(0,0,0,.35);
+}
+
+/* Water caustics and sparkles */
+.water-caustics{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:1;
+  mix-blend-mode:screen;
+  opacity:.42;
+  overflow:hidden;
+}
+.water-caustics::before,.water-caustics::after{
+  content:"";
+  position:absolute;
+  inset:-20%;
+  background:
+    repeating-radial-gradient(circle at 50% 50%,
+      rgba(130,227,255,.15) 0 6px,
+      rgba(130,227,255,.02) 6px 22px,
+      transparent 22px 36px);
+  animation:caustics-drift 18s linear infinite;
+}
+.water-caustics::after{
+  opacity:.65;
+  transform:scale(1.2) rotate(18deg);
+  animation-duration:24s;
+  animation-direction:reverse;
+}
+@keyframes caustics-drift{
+  0%{transform:translate3d(-8%,-4%,0) rotate(0deg);}
+  50%{transform:translate3d(6%,5%,0) rotate(3deg);}
+  100%{transform:translate3d(-8%,-4%,0) rotate(0deg);}
+}
+
+#sparkle-layer{
+  position:absolute;
+  inset:0;
+  z-index:6;
+  pointer-events:none;
+  overflow:hidden;
+}
+.spark{
+  position:absolute;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:radial-gradient(circle,#fff2b9 0%, #8eeeff 45%, rgba(255,255,255,0) 75%);
+  filter:drop-shadow(0 0 8px rgba(163,240,255,.7));
+  animation:spark-float linear forwards;
+}
+@keyframes spark-float{
+  0%{opacity:0;transform:translate3d(0,20px,0) scale(.2);}
+  15%{opacity:1;}
+  100%{opacity:0;transform:translate3d(var(--sx),var(--sy),0) scale(1);}
+}
+
+/* Camera and impact effects */
+.board-area.camera-roll{animation:camera-roll .45s linear;}
+.board-area.camera-land{animation:camera-land .26s ease-out;}
+@keyframes camera-roll{
+  0%{transform:translate3d(0,0,0);}
+  20%{transform:translate3d(-1.5px,1px,0) rotate(-.25deg);}
+  40%{transform:translate3d(2px,-1px,0) rotate(.25deg);}
+  60%{transform:translate3d(-1px,2px,0) rotate(-.15deg);}
+  80%{transform:translate3d(1px,-1px,0) rotate(.15deg);}
+  100%{transform:translate3d(0,0,0);}
+}
+@keyframes camera-land{
+  0%{transform:translate3d(0,-3px,0) scale(1.01);}
+  30%{transform:translate3d(0,2px,0) scale(.995);}
+  100%{transform:translate3d(0,0,0) scale(1);}
+}
+
+/* 3D Dice */
+#dice-overlay{
+  background:radial-gradient(circle at 50% 35%, rgba(35,75,120,.35), rgba(0,0,0,.9));
+}
+#dice-3d-wrap{
+  width:146px;
+  height:146px;
+  perspective:900px;
+}
+.dice-cube{
+  width:100%;
+  height:100%;
+  position:relative;
+  transform-style:preserve-3d;
+  transform:rotateX(-20deg) rotateY(32deg);
+  transition:transform .75s cubic-bezier(.22,.61,.36,1);
+}
+.dice-face{
+  position:absolute;
+  inset:0;
+  border-radius:16px;
+  border:1px solid rgba(255,238,182,.85);
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,.45), transparent 35%),
+    linear-gradient(180deg,#fff9e8 0%, #e7e0cd 85%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8), inset 0 -9px 10px rgba(0,0,0,.16);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.dice-face .pip-grid{
+  width:76%;
+  height:76%;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  grid-template-rows:repeat(3,1fr);
+}
+.pip{
+  width:16px;height:16px;border-radius:50%;
+  margin:auto;
+  background:radial-gradient(circle at 36% 30%, #2f4e8d 0%, #152851 75%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
+}
+.dice-face.f1{transform:translateZ(72px);}
+.dice-face.f2{transform:rotateY(90deg) translateZ(72px);}
+.dice-face.f3{transform:rotateY(180deg) translateZ(72px);}
+.dice-face.f4{transform:rotateY(-90deg) translateZ(72px);}
+.dice-face.f5{transform:rotateX(90deg) translateZ(72px);}
+.dice-face.f6{transform:rotateX(-90deg) translateZ(72px);}
+
+/* Final gameplay background override: use salty.png only */
+#game{
+  background:
+    linear-gradient(180deg, rgba(3,12,24,.25), rgba(3,12,24,.25)),
+    url("salty.png") center center / cover no-repeat !important;
+}
+
+.board-bg{
+  background:transparent !important;
+  filter:none !important;
+}
+
+.board-bg::after,
+.ocean-shine,
+.water-caustics,
+.pirate-ship,
+.pirate-ship2{
+  display:none !important;
+}
+
+/* The supplied background already includes center island art */
+.island-container{
+  display:none !important;
+}
+
+/* Top HUD transparency so salty.png title is fully visible */
+.top-bar,
+.ref-bar,
+.hud-card,
+.player-hud,
+.logo-hud,
+.booty-chest,
+.coins-display,
+.ref-bar .ref-btn{
+  background:transparent !important;
+  border-color:transparent !important;
+  box-shadow:none !important;
+}
+
+.top-bar{
+  border-bottom:none !important;
+}
+
+.ref-bar{
+  border-bottom:none !important;
+}
+
+/* Keep text readable over image without solid blocks */
+.top-bar .player-name,
+.top-bar .player-lvl,
+.top-title .tagline,
+.booty-label,
+.booty-count,
+.ref-bar .ref-text,
+.ref-bar .ref-val{
+  text-shadow:0 2px 4px rgba(0,0,0,.8);
+}
+
+/* Dice rolling imported from dicerolling.html */
+#dice-overlay{
+  background:rgba(3,10,20,.18) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  overflow:hidden;
+}
+#dice-stage{
+  position:absolute;
+  inset:0;
+}
+#dice-stage canvas{
+  display:block;
+  width:100%;
+  height:100%;
+}
+#dice-num-text{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-58%);
+  font-size:92px;
+  font-family:'Cinzel Decorative', serif;
+  font-weight:900;
+  letter-spacing:-2px;
+  background:linear-gradient(180deg,#fff5b8 0%,#ffe071 26%,#ffae2f 50%,#ff4bb0 74%,#55e3ff 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  -webkit-text-stroke:1px rgba(35,20,5,.75);
+  text-shadow:
+    0 0 8px rgba(255,236,143,.6),
+    0 0 18px rgba(255,127,80,.55),
+    0 0 30px rgba(102,227,255,.45),
+    0 2px 0 rgba(0,0,0,.55);
+  opacity:0;
+  transition:opacity .35s cubic-bezier(0.16,1,0.3,1), transform .35s cubic-bezier(0.16,1,0.3,1), filter .35s;
+}
+#dice-num-text.show{
+  opacity:1;
+  transform:translate(-50%,-62%) scale(1.02);
+  animation:dice-win-spark 1.2s ease-in-out infinite alternate;
+}
+@keyframes dice-win-spark{
+  0%{filter:brightness(1) saturate(1);}
+  100%{filter:brightness(1.24) saturate(1.25);}
+}
+
+/* Splash: only use user-provided background image */
+#splash{
+  background:url("splash screen.png") center center / cover no-repeat !important;
+}
+#splash::before,
+#splash .stars,
+#splash .ocean-bg{
+  display:none !important;
+}
+#splash .splash-content{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:22px;
+  width:auto;
+  max-height:none;
+  overflow:visible;
+  padding:0 14px;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  background:transparent !important;
+  gap:10px;
+}
+#splash .splash-controls{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:min(100%, 360px);
+  margin:0 auto;
+  gap:8px;
+  background:transparent;
+  border:none;
+  border-radius:0;
+  padding:8px 0;
+  box-shadow:none;
+}
+#splash .soc-btn{
+  flex:0 0 auto;
+  width:clamp(36px, 11vw, 46px);
+  height:clamp(36px, 11vw, 46px);
+  border-radius:50%;
+  border:2px solid rgba(220,166,89,.9);
+  background:radial-gradient(circle at 30% 28%, rgba(255,255,255,.35), rgba(255,255,255,0) 38%), linear-gradient(180deg,#2c303a,#101723);
+  color:#fff;
+  font-size:clamp(16px, 4.6vw, 22px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 3px 10px rgba(0,0,0,.35);
+}
+#splash .soc-btn.x-logo{background-image:url("logo/twitter.png");background-size:100% 100%;background-position:center;background-repeat:no-repeat;color:transparent;}
+#splash .soc-btn.telegram-logo{background-image:url("logo/telegram.png");background-size:100% 100%;background-position:center;background-repeat:no-repeat;color:transparent;}
+#splash .soc-btn.youtube-logo{background-image:url("logo/youtube.png");background-size:100% 100%;background-position:center;background-repeat:no-repeat;color:transparent;}
+#splash .soc-btn.home-logo{background-image:url("logo/home.png");background-size:100% 100%;background-position:center;background-repeat:no-repeat;color:transparent;}
+#splash .soc-btn.telegram{background:radial-gradient(circle at 30% 28%, rgba(255,255,255,.4), rgba(255,255,255,0) 38%), linear-gradient(180deg,#36a8e9,#1883bd);}
+#splash .soc-btn.youtube{background:radial-gradient(circle at 30% 28%, rgba(255,255,255,.4), rgba(255,255,255,0) 38%), linear-gradient(180deg,#ff3c3c,#cc1515);}
+#splash .soc-btn.home{background:radial-gradient(circle at 30% 28%, rgba(255,255,255,.4), rgba(255,255,255,0) 38%), linear-gradient(180deg,#f6cf5d,#b88a1f);color:#2c1800;}
+#splash .play-btn{
+  margin:0;
+  position:relative;
+  flex:0 0 auto;
+  width:clamp(80px, 25vw, 102px);
+  height:clamp(80px, 25vw, 102px);
+  min-width:clamp(80px, 25vw, 102px);
+  padding:0;
+  border-radius:16px;
+  border:2px solid rgba(255,230,170,.96);
+  clip-path:polygon(50% 1%, 88% 20%, 93% 62%, 50% 98%, 7% 62%, 12% 20%);
+  font-size:clamp(18px, 5.4vw, 24px);
+  font-weight:900;
+  letter-spacing:.6px;
+  text-shadow:0 2px 3px rgba(0,0,0,.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(120% 100% at 50% 15%, rgba(255,255,255,.52), rgba(255,255,255,0) 42%),
+    linear-gradient(180deg,#fff2a5 0%, #ffd45d 36%, #d9a63c 64%, #9f6c18 100%);
+  color:#2b1900;
+  box-shadow:
+    0 0 16px rgba(255,220,118,.72),
+    0 10px 16px rgba(0,0,0,.46),
+    inset 0 1px 0 rgba(255,255,255,.6),
+    inset 0 -8px 12px rgba(126,73,12,.25);
+}
+#splash .play-btn::before{
+  content:"";
+  position:absolute;
+  inset:-10px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,216,104,.5) 0%, rgba(255,216,104,0) 68%);
+  z-index:-1;
+}
+
+@media (max-width: 360px){
+  #splash .splash-content{padding:0 8px;}
+  #splash .splash-controls{gap:6px;padding:7px 6px;}
+}
+
+/* Remove top-middle title widget from game screen */
+#game .top-title{
+  display:none !important;
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- SPLASH SCREEN -->
+<div id="splash" class="screen active">
+  <div class="stars" id="stars"></div>
+  <div class="ocean-bg"></div>
+  <div class="splash-content">
+    <div class="splash-controls">
+      <button class="soc-btn x-logo" title="X" onclick="showToast('X link coming soon')">✕</button>
+      <button class="soc-btn telegram-logo" title="Telegram" onclick="showToast('Telegram link coming soon')">✈</button>
+      <button class="play-btn" onclick="startGame()" aria-label="Play">PLAY</button>
+      <button class="soc-btn youtube-logo" title="YouTube" onclick="showToast('YouTube link coming soon')">▶</button>
+      <button class="soc-btn home-logo" title="Home" onclick="showToast('You are on home screen')">⌂</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game" class="screen">
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="player-info">
+      <div class="avatar" id="playerAvatar">👑</div>
+      <div class="player-data">
+        <div class="player-name" id="playerName">Salty King</div>
+        <div class="player-lvl">LVL <span id="playerLvl">1</span> · MAX</div>
+      </div>
+    </div>
+    <div class="top-title">
+      <h1>SALTY<br>KINGDOM</h1>
+      <div class="tagline">ROLL · RAID · RULE</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+      <div class="coins-display">
+        <span class="coin-icon">🪙</span>
+        <span id="coinCount">125,680</span>
+      </div>
+      <div class="booty-chest">
+        <div class="booty-label">BOOTY CHESTS</div>
+        <div class="booty-count"><span id="bootyCount">9</span> / 30</div>
+        <div class="booty-bar"><div class="booty-fill" id="bootyFill" style="width:30%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REF BONUS BAR -->
+  <div class="ref-bar">
+    <span class="ref-icon">👥</span>
+    <span class="ref-text">REFERRAL BONUS</span>
+    <span>🪙</span>
+    <span class="ref-val" id="refBonus">8,540</span>
+    <button class="ref-btn" onclick="showScreen('referral')">INVITE</button>
+  </div>
+
+  <!-- BOARD AREA -->
+  <div class="board-area">
+    <div class="board-bg"></div>
+    <div class="ocean-shine"></div>
+    <div class="water-caustics"></div>
+    <div id="sparkle-layer"></div>
+    <!-- Pirate ship layer -->
+    <div class="pirate-ship ship-sprite" style="top:12%;left:-30%;width:180px;height:100px;opacity:.42;background-position:center 38%;"></div>
+    <div class="pirate-ship pirate-ship2 ship-sprite" style="top:70%;width:140px;height:82px;opacity:.3;background-position:center 80%;"></div>
+    <!-- Wave lines -->
+    <div class="wave-line" style="top:30%;width:60%;left:20%;animation-delay:0s;"></div>
+    <div class="wave-line" style="top:60%;width:40%;left:30%;animation-delay:2s;"></div>
+    <div class="wave-line" style="top:75%;width:70%;left:15%;animation-delay:1s;"></div>
+    <!-- Island -->
+    <div class="island-container">
+      <svg class="island-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="islandGrad" cx="50%" cy="60%" r="50%">
+            <stop offset="0%" stop-color="#c8a640"/>
+            <stop offset="60%" stop-color="#a07820"/>
+            <stop offset="100%" stop-color="#6b4e0a"/>
+          </radialGradient>
+          <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFD700" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#FF8C00" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <!-- Glow -->
+        <ellipse cx="100" cy="100" rx="80" ry="80" fill="url(#glowGrad)" opacity="0.4"/>
+        <!-- Island base -->
+        <ellipse cx="100" cy="120" rx="65" ry="38" fill="url(#islandGrad)"/>
+        <!-- Trees -->
+        <rect x="78" y="62" width="6" height="35" fill="#4a3000" rx="2"/>
+        <ellipse cx="81" cy="58" rx="14" ry="20" fill="#1a5e1a"/>
+        <ellipse cx="81" cy="52" rx="10" ry="14" fill="#257a25"/>
+        <rect x="108" y="72" width="5" height="28" fill="#4a3000" rx="2"/>
+        <ellipse cx="110" cy="68" rx="11" ry="16" fill="#1a5e1a"/>
+        <ellipse cx="110" cy="63" rx="8" ry="11" fill="#257a25"/>
+        <!-- Castle/fort -->
+        <rect x="82" y="88" width="36" height="30" fill="#5c4010" rx="4"/>
+        <rect x="82" y="80" width="10" height="14" fill="#5c4010" rx="2"/>
+        <rect x="108" y="80" width="10" height="14" fill="#5c4010" rx="2"/>
+        <rect x="90" y="82" width="20" height="8" fill="#4a3000" rx="1"/>
+        <!-- Crown on top -->
+        <path d="M88 82 L96 70 L100 78 L104 70 L112 82 Z" fill="#FFD700" stroke="#FF8C00" stroke-width="1"/>
+        <circle cx="100" cy="68" r="5" fill="#FFD700" opacity="0.9"/>
+        <!-- Flames -->
+        <ellipse cx="92" cy="114" rx="4" ry="5" fill="#FF6B00" opacity="0.8">
+          <animate attributeName="ry" values="5;7;5" dur="1s" repeatCount="indefinite"/>
+        </ellipse>
+        <ellipse cx="108" cy="112" rx="3" ry="4" fill="#FF8C00" opacity="0.8">
+          <animate attributeName="ry" values="4;6;4" dur="0.8s" repeatCount="indefinite"/>
+        </ellipse>
+        <!-- Gold coins -->
+        <circle cx="78" cy="142" r="4" fill="#FFD700"/>
+        <circle cx="88" cy="146" r="3" fill="#FFD700"/>
+        <circle cx="115" cy="143" r="4" fill="#FFD700"/>
+        <circle cx="105" cy="147" r="3" fill="#FFD700"/>
+        <circle cx="100" cy="144" r="5" fill="#FFD700" stroke="#FF8C00" stroke-width="1"/>
+      </svg>
+    </div>
+    <!-- BOARD TRACK -->
+    <div class="board-track" id="boardTrack"></div>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="bottom-bar">
+    <div class="energy-pill">
+      <div class="energy-icon">⚙️</div>
+      <div class="energy-count" id="spinCount">28 / 28</div>
+      <div class="energy-label">FULL</div>
+    </div>
+    <button class="roll-btn" id="rollBtn" onclick="rollDice()">
+      🎲 ROLL
+      <span class="roll-sub">HOLD TO AUTOROLL</span>
+    </button>
+    <div class="energy-pill dice-side" onclick="showDiceInfo()">
+      <div class="dice-icon">🎲</div>
+      <div class="energy-count" id="diceCount">28 / 28</div>
+      <div class="energy-label">FULL</div>
+    </div>
+  </div>
+
+  <!-- NAV BAR -->
+  <div class="nav-bar">
+    <button class="nav-btn active" onclick="setNav(this,'game')">
+      <span class="nav-icon">🏝️</span>
+      <span class="nav-label">BOARD</span>
+    </button>
+    <button class="nav-btn" onclick="setNav(this,'raids')">
+      <span class="nav-icon">⚔️</span>
+      <span class="nav-label">RAID</span>
+    </button>
+    <button class="nav-btn" onclick="setNav(this,'rewards')">
+      <span class="nav-icon">🎁</span>
+      <span class="nav-label">REWARDS</span>
+    </button>
+    <button class="nav-btn" onclick="setNav(this,'leaderboard')">
+      <span class="nav-icon">🏆</span>
+      <span class="nav-label">RANKS</span>
+    </button>
+    <button class="nav-btn" onclick="setNav(this,'referral')">
+      <span class="nav-icon">👥</span>
+      <span class="nav-label">REFER</span>
+    </button>
+  </div>
+</div>
+
+<!-- LEADERBOARD SCREEN -->
+<div id="leaderboard-screen" class="screen video-bg-screen">
+  <div class="screen-bg-video"><video src="logo/background vid.mp4" autoplay muted loop playsinline></video></div>
+  <div class="lb-header">
+    <h2>🏆 HALL OF CAPTAINS</h2>
+  </div>
+  <div class="lb-list" id="lbList"></div>
+  <div class="nav-bar">
+    <button class="nav-btn" onclick="setNav(this,'game')"><span class="nav-icon">🏝️</span><span class="nav-label">BOARD</span></button>
+    <button class="nav-btn" onclick="setNav(this,'raids')"><span class="nav-icon">⚔️</span><span class="nav-label">RAID</span></button>
+    <button class="nav-btn" onclick="setNav(this,'rewards')"><span class="nav-icon">🎁</span><span class="nav-label">REWARDS</span></button>
+    <button class="nav-btn active" onclick="setNav(this,'leaderboard')"><span class="nav-icon">🏆</span><span class="nav-label">RANKS</span></button>
+    <button class="nav-btn" onclick="setNav(this,'referral')"><span class="nav-icon">👥</span><span class="nav-label">REFER</span></button>
+  </div>
+</div>
+
+<!-- RAIDS SCREEN -->
+<div id="raids-screen" class="screen video-bg-screen">
+  <div class="screen-bg-video"><video src="logo/background vid.mp4" autoplay muted loop playsinline></video></div>
+  <div class="raids-header">
+    <h2>⚔️ RAID THE SEAS</h2>
+    <p>Attack other pirates and plunder their gold!</p>
+  </div>
+  <div class="raid-targets" id="raidTargets"></div>
+  <div class="nav-bar">
+    <button class="nav-btn" onclick="setNav(this,'game')"><span class="nav-icon">🏝️</span><span class="nav-label">BOARD</span></button>
+    <button class="nav-btn active" onclick="setNav(this,'raids')"><span class="nav-icon">⚔️</span><span class="nav-label">RAID</span></button>
+    <button class="nav-btn" onclick="setNav(this,'rewards')"><span class="nav-icon">🎁</span><span class="nav-label">REWARDS</span></button>
+    <button class="nav-btn" onclick="setNav(this,'leaderboard')"><span class="nav-icon">🏆</span><span class="nav-label">RANKS</span></button>
+    <button class="nav-btn" onclick="setNav(this,'referral')"><span class="nav-icon">👥</span><span class="nav-label">REFER</span></button>
+  </div>
+</div>
+
+<!-- REWARDS SCREEN -->
+<div id="rewards-screen" class="screen video-bg-screen">
+  <div class="screen-bg-video"><video src="logo/background vid.mp4" autoplay muted loop playsinline></video></div>
+  <div class="rewards-header">
+    <h2>🎁 DAILY PLUNDER</h2>
+  </div>
+  <div class="rewards-content" id="rewardsContent"></div>
+  <div class="nav-bar">
+    <button class="nav-btn" onclick="setNav(this,'game')"><span class="nav-icon">🏝️</span><span class="nav-label">BOARD</span></button>
+    <button class="nav-btn" onclick="setNav(this,'raids')"><span class="nav-icon">⚔️</span><span class="nav-label">RAID</span></button>
+    <button class="nav-btn active" onclick="setNav(this,'rewards')"><span class="nav-icon">🎁</span><span class="nav-label">REWARDS</span></button>
+    <button class="nav-btn" onclick="setNav(this,'leaderboard')"><span class="nav-icon">🏆</span><span class="nav-label">RANKS</span></button>
+    <button class="nav-btn" onclick="setNav(this,'referral')"><span class="nav-icon">👥</span><span class="nav-label">REFER</span></button>
+  </div>
+</div>
+
+<!-- REFERRAL SCREEN -->
+<div id="referral-screen" class="screen video-bg-screen">
+  <div class="screen-bg-video"><video src="logo/background vid.mp4" autoplay muted loop playsinline></video></div>
+  <div class="ref-header">
+    <h2>👥 RECRUIT PIRATES</h2>
+  </div>
+  <div class="ref-content" id="refContent"></div>
+  <div class="nav-bar">
+    <button class="nav-btn" onclick="setNav(this,'game')"><span class="nav-icon">🏝️</span><span class="nav-label">BOARD</span></button>
+    <button class="nav-btn" onclick="setNav(this,'raids')"><span class="nav-icon">⚔️</span><span class="nav-label">RAID</span></button>
+    <button class="nav-btn" onclick="setNav(this,'rewards')"><span class="nav-icon">🎁</span><span class="nav-label">REWARDS</span></button>
+    <button class="nav-btn" onclick="setNav(this,'leaderboard')"><span class="nav-icon">🏆</span><span class="nav-label">RANKS</span></button>
+    <button class="nav-btn active" onclick="setNav(this,'referral')"><span class="nav-icon">👥</span><span class="nav-label">REFER</span></button>
+  </div>
+</div>
+
+<!-- ADMIN SCREEN -->
+<div id="admin-screen" class="screen video-bg-screen">
+  <div class="screen-bg-video"><video src="logo/background vid.mp4" autoplay muted loop playsinline></video></div>
+  <div class="admin-header">
+    <h2>⚙️ Admin Panel</h2>
+  </div>
+  <div class="admin-content" id="adminContent"></div>
+</div>
+
+<!-- LOCAL SPRITE SHEET -->
+<svg width="0" height="0" style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="spr-coin" viewBox="0 0 64 64">
+      <defs><radialGradient id="sprCoinGrad" cx="35%" cy="30%" r="60%"><stop offset="0%" stop-color="#fff5bf"/><stop offset="45%" stop-color="#ffd860"/><stop offset="100%" stop-color="#ba7c12"/></radialGradient></defs>
+      <circle cx="32" cy="32" r="18" fill="url(#sprCoinGrad)" stroke="#f3c257" stroke-width="3"/>
+      <circle cx="32" cy="32" r="8" fill="none" stroke="#a5690d" stroke-width="3"/>
+    </symbol>
+    <symbol id="spr-chest" viewBox="0 0 64 64">
+      <rect x="10" y="22" width="44" height="26" rx="5" fill="#7f3b1d" stroke="#cc8a3e" stroke-width="3"/>
+      <path d="M10 28 C18 14,46 14,54 28 L54 34 L10 34 Z" fill="#a6532b" stroke="#cc8a3e" stroke-width="3"/>
+      <rect x="28" y="30" width="8" height="14" rx="2" fill="#f7cf67"/>
+    </symbol>
+    <symbol id="spr-mult" viewBox="0 0 64 64">
+      <rect x="6" y="10" width="52" height="44" rx="12" fill="#1a77af" stroke="#6dd8ff" stroke-width="3"/>
+      <path d="M23 24 L29 30 L23 36 M41 24 L35 30 L41 36" fill="none" stroke="#dff8ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="spr-skull" viewBox="0 0 64 64">
+      <path d="M32 12c-10 0-17 7-17 16 0 6 3 10 8 12v8h18v-8c5-2 8-6 8-12 0-9-7-16-17-16z" fill="#f0e1c8" stroke="#8a6e52" stroke-width="3"/>
+      <circle cx="25" cy="29" r="4" fill="#351f12"/><circle cx="39" cy="29" r="4" fill="#351f12"/>
+      <rect x="27" y="40" width="10" height="5" rx="2" fill="#351f12"/>
+    </symbol>
+    <symbol id="spr-crown" viewBox="0 0 64 64">
+      <path d="M10 42 L18 22 L30 33 L40 20 L50 42 Z" fill="#ffd35c" stroke="#c17b10" stroke-width="3"/>
+      <rect x="12" y="42" width="40" height="10" rx="4" fill="#e8b43f" stroke="#9c650d" stroke-width="3"/>
+      <circle cx="18" cy="22" r="3" fill="#ff7f7f"/><circle cx="30" cy="33" r="3" fill="#6ed8ff"/><circle cx="40" cy="20" r="3" fill="#80f7a0"/>
+    </symbol>
+    <symbol id="spr-wheel" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="18" fill="#5a3a20" stroke="#d0a96e" stroke-width="3"/>
+      <circle cx="32" cy="32" r="4" fill="#d0a96e"/>
+      <line x1="32" y1="14" x2="32" y2="50" stroke="#d0a96e" stroke-width="2"/>
+      <line x1="14" y1="32" x2="50" y2="32" stroke="#d0a96e" stroke-width="2"/>
+      <line x1="19" y1="19" x2="45" y2="45" stroke="#d0a96e" stroke-width="2"/>
+      <line x1="45" y1="19" x2="19" y2="45" stroke="#d0a96e" stroke-width="2"/>
+    </symbol>
+    <symbol id="spr-start" viewBox="0 0 64 64">
+      <path d="M14 41 L14 22 L50 22 L50 41" fill="none" stroke="#ffd479" stroke-width="4"/>
+      <path d="M18 22 L18 16 L28 22 L36 14 L45 22 L46 22" fill="none" stroke="#ffd479" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- DICE ROLLING OVERLAY -->
+<div id="dice-overlay">
+  <div id="dice-stage"></div>
+  <div id="dice-num-text"></div>
+</div>
+
+<!-- MODAL OVERLAY -->
+<div class="overlay hidden" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// =================== GAME STATE ===================
+const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+const TILE_TYPES = ['coin','coin','coin','coin','coin','chest','multiplier','skull','crown','wheel','coin','coin','coin','coin','chest','multiplier','skull','coin','crown','coin','coin','coin','skull','chest','multiplier','coin','coin','coin','start'];
+
+const state = {
+  coins: 125680,
+  booty: 9,
+  maxBooty: 30,
+  spins: 28,
+  maxSpins: 28,
+  playerPos: 0,
+  level: 1,
+  refBonus: 8540,
+  referralCode: 'SLTKG-' + Math.random().toString(36).substring(2,8).toUpperCase(),
+  referrals: 7,
+  referralEarnings: 8540,
+  dailyDay: 4,
+  dailyClaimed: [true,true,true,true,false,false,false],
+  totalRaids: 12,
+  raidWins: 8,
+  isRolling: false,
+  multiplier: 1,
+  leaderboard: [
+    {name:'Blackbeard Rex', coins:892450, avatar:'🦁', raids:45, lvl:32},
+    {name:'Sea Queen Mara', coins:756200, avatar:'👸', raids:38, lvl:28},
+    {name:'Captain Flint', coins:643100, avatar:'🦜', raids:31, lvl:24},
+    {name:'Iron Anchor Joe', coins:521800, avatar:'⚓', raids:27, lvl:21},
+    {name:'Salty King', coins:125680, avatar:'👑', raids:12, lvl:1},
+    {name:'Jolly Roger Fan', coins:98200, avatar:'🏴‍☠️', raids:9, lvl:6},
+    {name:'Pearl Diver Sam', coins:76500, avatar:'🐚', raids:7, lvl:5},
+    {name:'Rum Runner Bob', coins:45200, avatar:'🍺', raids:4, lvl:3},
+    {name:'Tide Watcher Nix', coins:23100, avatar:'🌊', raids:2, lvl:2},
+    {name:'New Deckhand', coins:5000, avatar:'🐟', raids:0, lvl:1},
+  ],
+  raidTargets: [
+    {name:'Blackbeard Rex', coins:892450, avatar:'🦁', chance:20, reward:45000},
+    {name:'Sea Queen Mara', coins:756200, avatar:'👸', chance:30, reward:37000},
+    {name:'Iron Anchor Joe', coins:521800, avatar:'⚓', chance:40, reward:25000},
+    {name:'Jolly Roger Fan', coins:98200, avatar:'🏴‍☠️', chance:65, reward:8000},
+    {name:'Pearl Diver Sam', coins:76500, avatar:'🐚', chance:70, reward:5500},
+  ],
+  friends:[
+    {name:'Captain Sven', avatar:'🧔', date:'2 days ago', bonus:1500},
+    {name:'Lady Corsair', avatar:'👩‍🦰', date:'5 days ago', bonus:1500},
+    {name:'Marco Polo Jr', avatar:'🗺️', date:'1 week ago', bonus:1500},
+    {name:'The Kraken', avatar:'🐙', date:'2 weeks ago', bonus:1500},
+    {name:'Barnacle Bill', avatar:'🦀', date:'3 weeks ago', bonus:1500},
+  ],
+  totalUsers: 4821,
+  totalCoins: 12847500,
+};
+
+// =================== BOARD TILES ===================
+const tiles = [];
+const TOTAL_TILES = 28;
+const TILE_DEFS = [
+  {type:'start',label:'START',special:'start'},
+  {type:'coin',label:'+500'},
+  {type:'coin',label:'+1K'},
+  {type:'wheel',label:'SPIN'},
+  {type:'coin',label:'+500'},
+  {type:'coin',label:'+1K'},
+  {type:'chest',label:'CHEST'},
+  {type:'coin',label:'+500'},
+  {type:'multiplier',label:'2X',mult:2},
+  {type:'coin',label:'+500'},
+  {type:'skull',label:'RAID'},
+  {type:'coin',label:'+1K'},
+  {type:'coin',label:'+500'},
+  {type:'crown',label:'CROWN'},
+  {type:'coin',label:'+500'},
+  {type:'coin',label:'+2K'},
+  {type:'skull',label:'RAID'},
+  {type:'multiplier',label:'5X',mult:5},
+  {type:'coin',label:'+500'},
+  {type:'chest',label:'CHEST'},
+  {type:'coin',label:'+1K'},
+  {type:'crown',label:'CROWN'},
+  {type:'coin',label:'+500'},
+  {type:'skull',label:'RAID'},
+  {type:'coin',label:'+1K'},
+  {type:'multiplier',label:'2X',mult:2},
+  {type:'chest',label:'CHEST'},
+  {type:'coin',label:'+500'},
+];
+
+// =================== BOARD LAYOUT ===================
+function getBoardPositions() {
+  const boardArea = document.querySelector('.board-area');
+  const areaW = boardArea ? boardArea.offsetWidth : window.innerWidth;
+  const areaH = boardArea ? boardArea.offsetHeight : 340;
+
+  // Crown house center in salty.png sits a bit below visual middle.
+  const cx = areaW * 0.5;
+  const cy = areaH * 0.56;
+
+  // Force a circular track (single radius), not ellipse.
+  const radius = Math.max(132, Math.min(areaW, areaH) * 0.40);
+
+  const positions = [];
+  for(let i = 0; i < TOTAL_TILES; i++) {
+    const angle = (i / TOTAL_TILES) * Math.PI * 2 - Math.PI / 2;
+    positions.push({
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle)
+    });
+  }
+  return positions;
+}
+
+function buildBoard() {
+  const track = document.getElementById('boardTrack');
+  track.innerHTML = '';
+  const positions = getBoardPositions();
+  TILE_DEFS.forEach((tile, i) => {
+    const el = document.createElement('div');
+    el.className = `tile ${tile.type}`;
+    el.id = `tile-${i}`;
+    el.style.left = (positions[i].x - 22) + 'px';
+    el.style.top = (positions[i].y - 22) + 'px';
+    el.innerHTML = `<span class="tile-art">${getTileArt(tile)}</span><span class="tile-label">${tile.label}</span>`;
+    el.onclick = () => showTileInfo(i);
+    track.appendChild(el);
+  });
+  updatePlayerPosition(state.playerPos);
+}
+
+function getTileArt(tile) {
+  const spriteMap = {
+    coin: 'spr-coin',
+    chest: 'spr-chest',
+    multiplier: 'spr-mult',
+    skull: 'spr-skull',
+    crown: 'spr-crown',
+    wheel: 'spr-wheel',
+    start: 'spr-start',
+  };
+  const sprite = spriteMap[tile.type] || 'spr-coin';
+  if(tile.type === 'multiplier') {
+    return `<svg viewBox="0 0 64 64" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
+      <use href="#${sprite}"></use>
+      <text x="32" y="41" text-anchor="middle" font-size="20" font-weight="900" fill="#dff8ff" font-family="Cinzel, serif">${tile.mult || 2}X</text>
+    </svg>`;
+  }
+  return `<svg viewBox="0 0 64 64" width="26" height="26" xmlns="http://www.w3.org/2000/svg"><use href="#${sprite}"></use></svg>`;
+}
+
+function updatePlayerPosition(pos) {
+  document.querySelectorAll('.tile').forEach(t => {
+    t.classList.remove('player-here');
+    const tok = t.querySelector('.player-token');
+    if(tok) tok.remove();
+  });
+  const tile = document.getElementById(`tile-${pos}`);
+  if(tile) {
+    tile.classList.add('player-here');
+    const token = document.createElement('div');
+    token.className = 'player-token';
+    token.textContent = '';
+    tile.appendChild(token);
+  }
+}
+
+function showTileInfo(i) {
+  const tile = TILE_DEFS[i];
+  showModal(`<h2>${getTileSymbol(tile.type)} ${tile.label}</h2><p>${getTileDesc(tile.type)}</p><button class="close-btn" onclick="closeModal()">Got it!</button>`);
+}
+function getTileSymbol(type) {
+  const map = {
+    coin:'🪙',
+    chest:'🧰',
+    multiplier:'⚡',
+    skull:'💀',
+    crown:'👑',
+    wheel:'🛞',
+    start:'🏴‍☠️'
+  };
+  return map[type] || '✨';
+}
+function getTileDesc(type) {
+  const descs = {
+    coin:'Collect gold coins for your treasury!',
+    chest:'Open a Booty Chest for bonus loot!',
+    multiplier:'Multiply your next coin reward!',
+    skull:'Trigger a random raid on another pirate!',
+    crown:'Claim the crown for bonus XP and coins!',
+    wheel:'Spin the wheel of fortune!',
+    start:'The starting port — begin your adventure!',
+  };
+  return descs[type]||'A mysterious tile...';
+}
+
+// =================== DICE ROLL ===================
+function triggerCameraFX(className, duration = 320) {
+  const boardArea = document.querySelector('.board-area');
+  if(!boardArea) return;
+  boardArea.classList.remove('camera-roll', 'camera-land');
+  void boardArea.offsetWidth;
+  boardArea.classList.add(className);
+  setTimeout(() => boardArea.classList.remove(className), duration);
+}
+
+let diceRoller = null;
+const DICE_FACE_ROT = {
+  1:[ Math.PI/2,  0,          0],
+  2:[ 0,          0,          0],
+  3:[ 0,         -Math.PI/2,  0],
+  4:[ 0,          Math.PI/2,  0],
+  5:[ 0,          Math.PI,    0],
+  6:[-Math.PI/2,  0,          0],
+};
+
+function createDiceFaceTexture(n){
+  const S = 256;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  const cx = cv.getContext('2d');
+  cx.fillStyle = '#050505';
+  cx.fillRect(0,0,S,S);
+  const pad = 10;
+  cx.fillStyle = '#f2ede8';
+  cx.strokeStyle = 'rgba(0,0,0,0.09)';
+  cx.lineWidth = 1.4;
+  const r = 18;
+  cx.beginPath();
+  cx.moveTo(pad+r,pad);
+  cx.lineTo(S-pad-r,pad); cx.quadraticCurveTo(S-pad,pad,S-pad,pad+r);
+  cx.lineTo(S-pad,S-pad-r); cx.quadraticCurveTo(S-pad,S-pad,S-pad-r,S-pad);
+  cx.lineTo(pad+r,S-pad); cx.quadraticCurveTo(pad,S-pad,pad,S-pad-r);
+  cx.lineTo(pad,pad+r); cx.quadraticCurveTo(pad,pad,pad+r,pad);
+  cx.closePath();
+  cx.fill(); cx.stroke();
+
+  const map = {
+    1:[[128,128]],
+    2:[[176,80],[80,176]],
+    3:[[176,80],[128,128],[80,176]],
+    4:[[80,80],[176,80],[80,176],[176,176]],
+    5:[[80,80],[176,80],[128,128],[80,176],[176,176]],
+    6:[[80,74],[176,74],[80,128],[176,128],[80,182],[176,182]],
+  };
+  map[n].forEach(([px,py])=>{
+    const g = cx.createRadialGradient(px-6,py-7,2,px,py,18);
+    g.addColorStop(0,'#353535');
+    g.addColorStop(1,'#060606');
+    cx.fillStyle = g;
+    cx.beginPath();
+    cx.arc(px,py,13,0,Math.PI*2);
+    cx.fill();
+  });
+  const tex = new THREE.CanvasTexture(cv);
+  tex.anisotropy = 8;
+  return tex;
+}
+
+function initDiceRoller() {
+  if(diceRoller || typeof THREE === 'undefined') return;
+  const stage = document.getElementById('dice-stage');
+  if(!stage) return;
+  const w = stage.clientWidth || window.innerWidth;
+  const h = stage.clientHeight || window.innerHeight;
+  const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(w, h);
+  renderer.shadowMap.enabled = true;
+  stage.innerHTML = '';
+  stage.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(36, w / h, 0.1, 100);
+  camera.position.set(0,2.9,7.2);
+  camera.lookAt(0,0,0);
+
+  scene.add(new THREE.AmbientLight(0xffffff, .55));
+  const key = new THREE.DirectionalLight(0xffffff, 1.45);
+  key.position.set(5,9,6);
+  key.castShadow = true;
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffffff, .3);
+  rim.position.set(-6,1,-4);
+  scene.add(rim);
+
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(50,50),
+    new THREE.ShadowMaterial({opacity:.4})
+  );
+  floor.rotation.x = -Math.PI/2;
+  floor.position.y = -1.1;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  const geo = new THREE.BoxGeometry(1.2,1.2,1.2);
+  const order = [3,4,1,6,2,5];
+  const mats = order.map(num => new THREE.MeshStandardMaterial({map:createDiceFaceTexture(num), roughness:.12, metalness:0}));
+  const dice = new THREE.Mesh(geo, mats);
+  dice.castShadow = true;
+  dice.rotation.set(...DICE_FACE_ROT[1]);
+  scene.add(dice);
+
+  diceRoller = {stage, renderer, scene, camera, dice, rollReq: null};
+}
+
+function playDiceRollAnimation(resultValue) {
+  return new Promise((resolve) => {
+    if(typeof THREE === 'undefined') {
+      setTimeout(() => resolve(resultValue), 1100);
+      return;
+    }
+    initDiceRoller();
+    if(!diceRoller) {
+      setTimeout(() => resolve(resultValue), 1100);
+      return;
+    }
+    const {renderer, scene, camera, dice} = diceRoller;
+    const duration = 2400;
+    const start = performance.now();
+    const s = {x:dice.rotation.x, y:dice.rotation.y, z:dice.rotation.z};
+    const [fx, fy, fz] = DICE_FACE_ROT[resultValue];
+    const ex = fx + (Math.floor(Math.random()*4)+4)*Math.PI*2;
+    const ey = fy + (Math.floor(Math.random()*4)+4)*Math.PI*2;
+    const ez = fz + (Math.floor(Math.random()*3)+3)*Math.PI*2;
+
+    function step(now){
+      const t = Math.min(1, (now - start) / duration);
+      const e = t < .5 ? 8*t*t*t*t : 1 - Math.pow(-2*t + 2, 4) / 2;
+      dice.rotation.x = s.x + (ex - s.x) * e;
+      dice.rotation.y = s.y + (ey - s.y) * e;
+      dice.rotation.z = s.z + (ez - s.z) * e;
+      if(t < .45) {
+        dice.position.y = Math.sin((t/.45) * Math.PI) * 1.05;
+      } else {
+        const t2 = (t - .45) / .55;
+        dice.position.y = (1 - t2) * .28;
+      }
+      renderer.render(scene, camera);
+      if(t < 1){
+        diceRoller.rollReq = requestAnimationFrame(step);
+      } else {
+        dice.rotation.set(...DICE_FACE_ROT[resultValue]);
+        dice.position.y = 0;
+        renderer.render(scene, camera);
+        resolve(resultValue);
+      }
+    }
+    if(diceRoller.rollReq) cancelAnimationFrame(diceRoller.rollReq);
+    diceRoller.rollReq = requestAnimationFrame(step);
+  });
+}
+
+function rollDice() {
+  if(state.isRolling || state.spins <= 0) {
+    if(state.spins <= 0) showToast('⚙️ No spins left! Wait for refill.');
+    return;
+  }
+  state.isRolling = true;
+  state.spins--;
+  updateUI();
+
+  const rollBtn = document.getElementById('rollBtn');
+  rollBtn.classList.add('rolling');
+  triggerCameraFX('camera-roll', 460);
+
+  // Show dice overlay
+  const overlay = document.getElementById('dice-overlay');
+  const diceText = document.getElementById('dice-num-text');
+  overlay.classList.add('show');
+  diceText.classList.remove('show');
+  diceText.textContent = '';
+
+  const roll = Math.floor(Math.random()*6)+1;
+  playDiceRollAnimation(roll).then(() => {
+    diceText.textContent = roll;
+    diceText.classList.add('show');
+    setTimeout(() => {
+      overlay.classList.remove('show');
+      diceText.classList.remove('show');
+      rollBtn.classList.remove('rolling');
+      movePiece(roll);
+    }, 900);
+  });
+}
+
+function movePiece(steps) {
+  let step = 0;
+  const move = setInterval(() => {
+    step++;
+    state.playerPos = (state.playerPos + 1) % TOTAL_TILES;
+    updatePlayerPosition(state.playerPos);
+    if(step % 2 === 0) triggerCameraFX('camera-roll', 180);
+    if(step >= steps) {
+      clearInterval(move);
+      setTimeout(() => {
+        landOnTile(state.playerPos);
+        state.isRolling = false;
+      }, 200);
+    }
+  }, 200);
+}
+
+function spawnSparkle(x, y, burst = false) {
+  const layer = document.getElementById('sparkle-layer');
+  if(!layer) return;
+  const spark = document.createElement('div');
+  spark.className = 'spark';
+  spark.style.left = `${x}px`;
+  spark.style.top = `${y}px`;
+  const dx = (Math.random() * (burst ? 170 : 60) - (burst ? 85 : 30)).toFixed(1);
+  const dy = (Math.random() * (burst ? -170 : -90) - 20).toFixed(1);
+  spark.style.setProperty('--sx', `${dx}px`);
+  spark.style.setProperty('--sy', `${dy}px`);
+  spark.style.animationDuration = `${burst ? 800 + Math.random() * 700 : 1200 + Math.random() * 1800}ms`;
+  layer.appendChild(spark);
+  setTimeout(() => spark.remove(), 2800);
+}
+
+function startAmbientSparkles() {
+  const layer = document.getElementById('sparkle-layer');
+  if(!layer) return;
+  setInterval(() => {
+    if(!document.getElementById('game').classList.contains('active')) return;
+    const rect = layer.getBoundingClientRect();
+    const x = Math.random() * rect.width;
+    const y = Math.random() * rect.height * 0.86;
+    spawnSparkle(x, y, false);
+  }, 220);
+}
+
+function burstAtCurrentTile(count = 12) {
+  const layer = document.getElementById('sparkle-layer');
+  const tile = document.getElementById(`tile-${state.playerPos}`);
+  if(!layer || !tile) return;
+  const layerRect = layer.getBoundingClientRect();
+  const tileRect = tile.getBoundingClientRect();
+  const cx = tileRect.left + tileRect.width / 2 - layerRect.left;
+  const cy = tileRect.top + tileRect.height / 2 - layerRect.top;
+  for(let i = 0; i < count; i++) spawnSparkle(cx, cy, true);
+}
+
+function landOnTile(pos) {
+  triggerCameraFX('camera-land', 260);
+  burstAtCurrentTile(14);
+  const tile = TILE_DEFS[pos];
+  switch(tile.type) {
+    case 'coin': {
+      const baseReward = [500,500,500,1000,1000,2000][Math.floor(Math.random()*6)];
+      const reward = baseReward * state.multiplier;
+      state.multiplier = 1;
+      addCoins(reward);
+      showModal(`<h2>🪙 GOLD FOUND!</h2><div class="reward-amount">+${reward.toLocaleString()}</div><p>Your treasury grows, Captain!</p><button class="close-btn" onclick="closeModal()">Claim!</button>`);
+      spawnCoins();
+      break;
+    }
+    case 'chest': {
+      state.booty = Math.min(state.booty+1, state.maxBooty);
+      const reward = Math.floor(Math.random()*5000)+2000;
+      addCoins(reward);
+      updateUI();
+      showModal(`<h2>🧰 BOOTY CHEST!</h2><div class="reward-amount">+${reward.toLocaleString()}</div><p>A chest of buried treasure! Booty chests: ${state.booty}/${state.maxBooty}</p><button class="close-btn" onclick="closeModal()">Brilliant!</button>`);
+      break;
+    }
+    case 'multiplier': {
+      const mult = tile.mult || 2;
+      state.multiplier = mult;
+      showModal(`<h2>⚡ ${mult}X MULTIPLIER!</h2><div class="reward-amount">${mult}X</div><p>Your next coin reward is multiplied by ${mult}!</p><button class="close-btn" onclick="closeModal()">Arrr!</button>`);
+      break;
+    }
+    case 'skull': {
+      doRaid();
+      break;
+    }
+    case 'crown': {
+      const reward = 3000;
+      addCoins(reward);
+      state.level++;
+      updateUI();
+      showModal(`<h2>👑 CROWN CLAIMED!</h2><div class="reward-amount">+${reward.toLocaleString()}</div><p>You leveled up to LVL ${state.level}! Rule the seas, Captain!</p><button class="close-btn" onclick="closeModal()">Glory!</button>`);
+      break;
+    }
+    case 'wheel': {
+      const reward = (Math.floor(Math.random()*10)+1)*500;
+      addCoins(reward);
+      showModal(`<h2>🎡 WHEEL OF FORTUNE!</h2><div class="reward-amount">+${reward.toLocaleString()}</div><p>Fortune favors the bold!</p><button class="close-btn" onclick="closeModal()">Spin Again!</button>`);
+      break;
+    }
+    case 'start': {
+      const reward = 5000;
+      addCoins(reward);
+      state.spins = Math.min(state.spins+5, state.maxSpins);
+      showModal(`<h2>🏴‍☠️ BACK TO PORT!</h2><div class="reward-amount">+${reward.toLocaleString()}</div><p>Completed a full voyage! Earned bonus gold and 5 spins!</p><button class="close-btn" onclick="closeModal()">Set Sail!</button>`);
+      break;
+    }
+  }
+}
+
+function doRaid() {
+  const target = state.raidTargets[Math.floor(Math.random()*state.raidTargets.length)];
+  const win = Math.random()*100 < target.chance;
+  state.totalRaids++;
+  if(win) {
+    state.raidWins++;
+    addCoins(target.reward);
+    showModal(`<h2>⚔️ RAID SUCCESS!</h2><div class="reward-amount">+${target.reward.toLocaleString()}</div><p>You plundered ${target.avatar} ${target.name}'s fleet! Their gold is yours!</p><button class="close-btn" onclick="closeModal()">Victory!</button>`);
+  } else {
+    showModal(`<h2>💀 RAID FAILED!</h2><div style="font-size:48px;margin:8px 0;">😔</div><p>${target.avatar} ${target.name} defended their shores. Better luck next time, Captain!</p><button class="close-btn" onclick="closeModal()">Retreat!</button>`);
+  }
+}
+
+// =================== UI HELPERS ===================
+function addCoins(amount) {
+  state.coins += amount;
+  updateUI();
+}
+
+function updateUI() {
+  document.getElementById('coinCount').textContent = state.coins.toLocaleString();
+  document.getElementById('bootyCount').textContent = state.booty;
+  document.getElementById('bootyFill').style.width = (state.booty/state.maxBooty*100)+'%';
+  document.getElementById('spinCount').textContent = state.spins+' / '+state.maxSpins;
+  document.getElementById('diceCount').textContent = state.spins+' / '+state.maxSpins;
+  document.getElementById('playerLvl').textContent = state.level;
+  document.getElementById('refBonus').textContent = state.refBonus.toLocaleString();
+  // Update leaderboard entry
+  state.leaderboard[4].coins = state.coins;
+}
+
+function showModal(html) {
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.add('hidden');
+}
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if(e.target === this) closeModal();
+});
+
+function showToast(msg, duration=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), duration);
+}
+
+function spawnCoins() {
+  for(let i=0;i<5;i++) {
+    setTimeout(()=>{
+      const coin = document.createElement('div');
+      coin.className = 'coin-fly';
+      coin.textContent = '🪙';
+      coin.style.left = (30+Math.random()*40)+'%';
+      coin.style.top = '50%';
+      document.body.appendChild(coin);
+      setTimeout(()=>coin.remove(),1100);
+    }, i*120);
+  }
+}
+
+// =================== NAVIGATION ===================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id+'-screen')||document.getElementById(id);
+  const target = id==='game'?document.getElementById('game'):document.getElementById(id+'-screen');
+  if(target) target.classList.add('active');
+  if(id==='leaderboard') renderLeaderboard();
+  if(id==='raids') renderRaids();
+  if(id==='rewards') renderRewards();
+  if(id==='referral') renderReferral();
+}
+
+function setNav(btn, id) {
+  showScreen(id);
+  // highlight active nav btn on all navbars
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    if(b.onclick && b.onclick.toString().includes("'"+id+"'")) b.classList.add('active');
+  });
+}
+
+function showDiceInfo() {
+  showModal(`<h2>🎲 DICE ENERGY</h2><p>You have <b>${state.spins}/${state.maxSpins}</b> rolls remaining.<br><br>Energy refills over time. Visit daily for bonus spins!</p><button class="close-btn" onclick="closeModal()">Got it!</button>`);
+}
+
+// =================== LEADERBOARD ===================
+function renderLeaderboard() {
+  const sorted = [...state.leaderboard].sort((a,b)=>b.coins-a.coins);
+  const rankClass = ['','top1','top2','top3'];
+  document.getElementById('lbList').innerHTML = sorted.map((p,i)=>`
+    <div class="lb-item ${rankClass[i]||''}">
+      <div class="lb-rank">${i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`}</div>
+      <div class="lb-avatar">${p.avatar}</div>
+      <div class="lb-info">
+        <div class="lb-name">${p.name}${p.name==='Salty King'?' (YOU)':''}</div>
+        <div class="lb-coins">🪙 ${p.coins.toLocaleString()}</div>
+      </div>
+      <div class="lb-badge">LVL ${p.lvl}<br>⚔️ ${p.raids}</div>
+    </div>`).join('');
+}
+
+// =================== RAIDS ===================
+function renderRaids() {
+  document.getElementById('raidTargets').innerHTML = `
+    <div style="display:flex;gap:8px;padding:0 0 12px;font-size:11px;color:var(--text2);">
+      <span>⚔️ Raids: ${state.totalRaids}</span>
+      <span>✅ Wins: ${state.raidWins}</span>
+      <span>🎯 Win Rate: ${state.totalRaids>0?Math.round(state.raidWins/state.totalRaids*100):0}%</span>
+    </div>
+    ${state.raidTargets.map(t=>`
+    <div class="raid-card">
+      <div class="raid-avatar">${t.avatar}</div>
+      <div class="raid-info">
+        <div class="raid-name">${t.name}</div>
+        <div class="raid-coins">🪙 ${t.coins.toLocaleString()}</div>
+        <div class="raid-chance">Win chance: ${t.chance}% • Loot: +${t.reward.toLocaleString()}</div>
+      </div>
+      <button class="raid-btn" onclick="executeRaid('${t.name}',${t.chance},${t.reward},'${t.avatar}')">RAID!</button>
+    </div>`).join('')}`;
+}
+
+function executeRaid(name, chance, reward, avatar) {
+  const win = Math.random()*100 < chance;
+  state.totalRaids++;
+  if(win) {
+    state.raidWins++;
+    addCoins(reward);
+    showModal(`<h2>⚔️ PLUNDERED!</h2><div class="reward-amount">+${reward.toLocaleString()}</div><p>${avatar} ${name}'s gold is now yours! 🏴‍☠️</p><button class="close-btn" onclick="closeModal()">Victory!</button>`);
+    spawnCoins();
+  } else {
+    showModal(`<h2>💀 REPELLED!</h2><div style="font-size:48px;margin:8px 0;">🛡️</div><p>${avatar} ${name} fought back and won! Try again or find a weaker target.</p><button class="close-btn" onclick="closeModal()">Retreat!</button>`);
+  }
+  renderRaids();
+}
+
+// =================== REWARDS ===================
+const dailyRewards = [
+  {day:1,icon:'🪙',reward:'500'},
+  {day:2,icon:'🪙🪙',reward:'1K'},
+  {day:3,icon:'🧰',reward:'Chest'},
+  {day:4,icon:'🪙🪙🪙',reward:'2K'},
+  {day:5,icon:'⚔️',reward:'Raid'},
+  {day:6,icon:'👑',reward:'Crown'},
+  {day:7,icon:'💎',reward:'10K'},
+];
+const bootyChests = [
+  {name:'Silver Chest',icon:'🥈🧰',val:'2,000-5,000 coins',cost:5},
+  {name:'Gold Chest',icon:'🥇🧰',val:'5,000-15,000 coins',cost:10},
+  {name:'Diamond Chest',icon:'💎🧰',val:'15,000-50,000 coins',cost:20},
+  {name:'Kraken Chest',icon:'🐙🧰',val:'50,000-100,000 coins',cost:30},
+];
+function renderRewards() {
+  const today = state.dailyDay;
+  document.getElementById('rewardsContent').innerHTML = `
+    <div class="section-title">📅 DAILY LOGIN REWARDS</div>
+    <div class="daily-grid">
+      ${dailyRewards.map((d,i)=>`
+      <div class="day-card ${state.dailyClaimed[i]?'claimed':i===today-1?'today':''}">
+        <div class="day-num">Day ${d.day}</div>
+        <div class="day-icon">${state.dailyClaimed[i]?'✅':d.icon}</div>
+        <div class="day-reward">${d.reward}</div>
+      </div>`).join('')}
+    </div>
+    <button class="claim-btn" ${state.dailyClaimed[today-1]?'disabled':''} onclick="claimDaily()">
+      ${state.dailyClaimed[today-1]?'✅ Already Claimed Today':'🎁 CLAIM DAY '+today+' REWARD'}
+    </button>
+    <div class="section-title">🧰 BOOTY CHEST REWARDS</div>
+    <div class="booty-grid">
+      ${bootyChests.map(b=>`
+      <div class="booty-card">
+        <div class="bc-icon">${b.icon}</div>
+        <div class="bc-name">${b.name}</div>
+        <div class="bc-val">${b.val}</div>
+        <button class="bc-btn" onclick="openBootyChest(${b.cost},'${b.name}',${JSON.stringify(b.val)})">
+          ${b.cost} Chests
+        </button>
+      </div>`).join('')}
+    </div>`;
+}
+
+function claimDaily() {
+  const rewards = [500,1000,2000,2000,1500,3000,10000];
+  const reward = rewards[state.dailyDay-1];
+  state.dailyClaimed[state.dailyDay-1] = true;
+  addCoins(reward);
+  if(state.dailyDay < 7) state.dailyDay++;
+  renderRewards();
+  showModal(`<h2>🎁 DAY ${state.dailyDay-1} CLAIMED!</h2><div class="reward-amount">+${reward.toLocaleString()}</div><p>Come back tomorrow for Day ${state.dailyDay} reward!</p><button class="close-btn" onclick="closeModal()">🏴‍☠️ Arrr!</button>`);
+  spawnCoins();
+}
+
+function openBootyChest(cost, name, val) {
+  if(state.booty < cost) {
+    showToast(`Need ${cost} Booty Chests! You have ${state.booty}.`);
+    return;
+  }
+  state.booty -= cost;
+  const parts = val.split('-');
+  const min = parseInt(parts[0].replace(/,/g,'').replace('K','000'))||2000;
+  const max = parseInt(parts[1]?parts[1].replace(/,/g,'').replace('K','000').replace(' coins',''):min)||5000;
+  const reward = Math.floor(Math.random()*(max-min)+min);
+  addCoins(reward);
+  renderRewards();
+  showModal(`<h2>🧰 ${name} OPENED!</h2><div class="reward-amount">+${reward.toLocaleString()}</div><p>The chest bursts with gold!</p><button class="close-btn" onclick="closeModal()">Treasure!</button>`);
+  spawnCoins();
+}
+
+// =================== REFERRAL ===================
+function renderReferral() {
+  document.getElementById('refContent').innerHTML = `
+    <div class="ref-stats">
+      <div class="ref-stat"><div class="rs-val">${state.referrals}</div><div class="rs-lbl">Friends Referred</div></div>
+      <div class="ref-stat"><div class="rs-val">🪙${(state.referralEarnings/1000).toFixed(1)}K</div><div class="rs-lbl">Total Earned</div></div>
+      <div class="ref-stat"><div class="rs-val">1,500</div><div class="rs-lbl">Per Referral</div></div>
+    </div>
+    <div class="ref-code-box">
+      <p>Share your captain's code to earn 1,500 coins per recruit!</p>
+      <div class="ref-code">${state.referralCode}</div>
+      <button class="ref-copy-btn" onclick="copyRef()">📋 COPY INVITE LINK</button>
+    </div>
+    <div class="ref-list-title">👥 YOUR CREW (${state.friends.length} pirates)</div>
+    ${state.friends.map(f=>`
+    <div class="ref-friend">
+      <div class="rf-av">${f.avatar}</div>
+      <div class="rf-info">
+        <div class="rf-name">${f.name}</div>
+        <div class="rf-date">Joined ${f.date}</div>
+      </div>
+      <div class="rf-bonus">+${f.bonus.toLocaleString()} 🪙</div>
+    </div>`).join('')}`;
+}
+
+function copyRef() {
+  const link = `https://t.me/SaltyKingdomBot?start=${state.referralCode}`;
+  if(navigator.clipboard) navigator.clipboard.writeText(link);
+  showToast('🏴‍☠️ Invite link copied!');
+}
+
+// =================== ADMIN ===================
+function renderAdmin() {
+  document.getElementById('adminContent').innerHTML = `
+    <div class="admin-section">
+      <div class="admin-section-title">📊 Game Statistics</div>
+      <div class="admin-stat-grid">
+        <div class="admin-stat"><div class="as-val">${state.totalUsers.toLocaleString()}</div><div class="as-lbl">Total Users</div></div>
+        <div class="admin-stat"><div class="as-val">${state.totalCoins.toLocaleString()}</div><div class="as-lbl">Coins Distributed</div></div>
+        <div class="admin-stat"><div class="as-val">2,341</div><div class="as-lbl">Active Today</div></div>
+        <div class="admin-stat"><div class="as-val">847</div><div class="as-lbl">Raids Today</div></div>
+      </div>
+    </div>
+    <div class="admin-section">
+      <div class="admin-section-title">💰 Reward Control</div>
+      <div class="admin-control">
+        <input type="number" id="adminCoinAmt" placeholder="Coin amount" value="1000"/>
+        <button onclick="adminGiveCoins()">Give Coins</button>
+      </div>
+      <div class="admin-control">
+        <input type="number" id="adminSpinAmt" placeholder="Spin amount" value="5"/>
+        <button onclick="adminGiveSpins()">Give Spins</button>
+      </div>
+    </div>
+    <div class="admin-section">
+      <div class="admin-section-title">⚙️ System</div>
+      <div class="admin-control">
+        <button onclick="adminReset()" style="background:linear-gradient(135deg,var(--red),var(--red2));color:white;width:100%;">Reset Player Data</button>
+      </div>
+      <div class="admin-control">
+        <button onclick="showScreen('game');showToast('Returned to game');" style="background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;width:100%;">Back to Game</button>
+      </div>
+    </div>`;
+}
+
+function adminGiveCoins() {
+  const amt = parseInt(document.getElementById('adminCoinAmt').value)||1000;
+  addCoins(amt);
+  showToast(`✅ Gave ${amt.toLocaleString()} coins`);
+}
+function adminGiveSpins() {
+  const amt = parseInt(document.getElementById('adminSpinAmt').value)||5;
+  state.spins = Math.min(state.spins+amt, state.maxSpins);
+  updateUI();
+  showToast(`✅ Gave ${amt} spins`);
+}
+function adminReset() {
+  state.coins=0; state.booty=0; state.spins=28; state.playerPos=0; state.level=1;
+  updateUI(); updatePlayerPosition(0);
+  showToast('⚠️ Player data reset');
+}
+
+// =================== STARS ===================
+function generateStars() {
+  const container = document.getElementById('stars');
+  if(!container) return;
+  for(let i=0;i<80;i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    const size = Math.random()*2.5+0.5;
+    star.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*3}s;`;
+    container.appendChild(star);
+  }
+}
+
+// =================== INIT ===================
+function startGame() {
+  document.getElementById('splash').classList.remove('active');
+  document.getElementById('game').classList.add('active');
+  setTimeout(()=>{ buildBoard(); updateUI(); }, 100);
+  // Check for secret admin: tap coins 5x
+  let tapCount = 0, tapTimer;
+  document.getElementById('coinCount').addEventListener('click', ()=>{
+    tapCount++;
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(()=>tapCount=0, 2000);
+    if(tapCount>=5) {
+      tapCount=0;
+      renderAdmin();
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+      document.getElementById('admin-screen').classList.add('active');
+    }
+  });
+}
+
+const splashPlayBtn = document.querySelector('#splash .play-btn');
+if (splashPlayBtn) {
+  splashPlayBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    startGame();
+  }, { passive: false });
+}
+
+window.addEventListener('resize', ()=>{
+  if(document.getElementById('game').classList.contains('active')) buildBoard();
+  if(diceRoller && diceRoller.renderer && diceRoller.camera) {
+    const stage = document.getElementById('dice-stage');
+    const w = stage ? stage.clientWidth : window.innerWidth;
+    const h = stage ? stage.clientHeight : window.innerHeight;
+    diceRoller.camera.aspect = w / h;
+    diceRoller.camera.updateProjectionMatrix();
+    diceRoller.renderer.setSize(w, h);
+  }
+});
+generateStars();
+startAmbientSparkles();
+
+// Auto-refill spins every 60s (demo)
+setInterval(()=>{
+  if(state.spins < state.maxSpins) {
+    state.spins = Math.min(state.spins+1, state.maxSpins);
+    updateUI();
+    if(state.spins===state.maxSpins) showToast('⚙️ Spins fully refilled!');
+  }
+}, 60000);
+</script>
+</body>
+</html>
