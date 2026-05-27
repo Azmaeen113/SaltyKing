@@ -310,25 +310,31 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-famil
 /* Hard-fix ranks: nav always visible + list always scrollable */
 #leaderboard-screen.video-bg-screen{
   position:relative;
+  display:flex;
+  flex-direction:column;
+  height:100dvh;
   min-height:100dvh;
+  overflow:hidden;
 }
 #leaderboard-screen.video-bg-screen .lb-header{
   margin-top:20vh;
+  flex-shrink:0;
 }
 #leaderboard-screen.video-bg-screen .lb-list{
-  height:calc(100dvh - 20vh - 66px - 86px - env(safe-area-inset-bottom, 0px));
+  flex:1 1 auto;
   min-height:0;
   overflow-y:auto;
-  padding-bottom:18px;
+  padding-bottom:96px;
 }
 #leaderboard-screen.video-bg-screen .nav-bar{
-  position:fixed;
+  position:sticky;
+  bottom:0;
   left:0;
   right:0;
-  bottom:0;
-  z-index:60;
+  z-index:10;
   margin-top:0 !important;
   min-height:86px;
+  box-sizing:border-box;
   padding-bottom:max(6px, env(safe-area-inset-bottom, 0px));
 }
 
@@ -876,6 +882,125 @@ html,body{
   100%{filter:brightness(1.24) saturate(1.25);}
 }
 
+/* Spin wheel integration */
+.wheel-open-btn{
+  position:absolute;
+  right:12px;
+  bottom:12px;
+  z-index:12;
+  border:none;
+  border-radius:999px;
+  padding:8px 14px;
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  letter-spacing:.8px;
+  color:#1f1200;
+  background:linear-gradient(145deg,#ffe47f,#ffbe30 60%,#b8740a);
+  box-shadow:0 4px 0 #6b3f08,0 8px 16px rgba(0,0,0,.35);
+  cursor:pointer;
+}
+.wheel-open-btn:active{
+  transform:translateY(2px);
+  box-shadow:0 2px 0 #6b3f08,0 5px 10px rgba(0,0,0,.3);
+}
+#wheelOverlay.hidden{display:none;}
+#wheelOverlay{
+  position:fixed;
+  inset:0;
+  z-index:121;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(2,10,20,.88);
+  backdrop-filter:blur(4px);
+}
+.wheel-modal{
+  width:min(94vw,460px);
+  max-height:92vh;
+  overflow:auto;
+  border-radius:20px;
+  border:2px solid rgba(255,215,130,.65);
+  background:linear-gradient(180deg,#13304f,#081627);
+  box-shadow:0 18px 35px rgba(0,0,0,.5);
+  padding:16px 12px 14px;
+  text-align:center;
+  position:relative;
+}
+.wheel-close-btn{
+  position:absolute;
+  right:10px;
+  top:10px;
+  border:none;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  color:#fff;
+  background:rgba(255,255,255,.15);
+  cursor:pointer;
+}
+.wheel-title{
+  font-family:'Cinzel Decorative',serif;
+  color:#ffd76b;
+  font-size:20px;
+  margin:6px 0 8px;
+}
+.wheel-wrap{
+  position:relative;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:4px;
+}
+#wheelCanvas{
+  width:min(78vw,360px);
+  height:min(78vw,360px);
+  border-radius:50%;
+  filter:drop-shadow(0 16px 22px rgba(0,0,0,.55));
+}
+.wheel-pointer{
+  position:absolute;
+  top:2px;
+  left:50%;
+  transform:translateX(-50%);
+  width:38px;
+  height:44px;
+  background:linear-gradient(180deg,#fff,#ffd665,#a86f0e);
+  clip-path:polygon(50% 100%,0 0,100% 0);
+  z-index:3;
+}
+#hubCanvas{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:92px;
+  height:92px;
+  border-radius:50%;
+  z-index:4;
+  cursor:pointer;
+}
+.wheel-spin-btn{
+  margin-top:12px;
+  border:none;
+  border-radius:999px;
+  padding:12px 28px;
+  font-family:'Cinzel Decorative',serif;
+  color:#2a1700;
+  font-weight:900;
+  background:linear-gradient(145deg,#fff099,#ffba2d 55%,#bd6f04);
+  box-shadow:0 4px 0 #6f4308,0 10px 18px rgba(0,0,0,.35);
+  cursor:pointer;
+}
+.wheel-spin-btn:disabled{opacity:.5;cursor:not-allowed;}
+.wheel-result{
+  margin-top:12px;
+  min-height:28px;
+  color:#ffe89f;
+  font-size:16px;
+  text-shadow:0 0 12px rgba(255,210,96,.45);
+}
+
 /* Splash: only use user-provided background image */
 #splash{
   background:url("splash screen.png") center center / cover no-repeat !important;
@@ -1097,6 +1222,7 @@ html,body{
     </div>
     <!-- BOARD TRACK -->
     <div class="board-track" id="boardTrack"></div>
+    <button class="wheel-open-btn" onclick="openWheel()">🎡 WHEEL</button>
   </div>
 
   <!-- BOTTOM BAR -->
@@ -1264,6 +1390,21 @@ html,body{
   <div id="dice-num-text"></div>
 </div>
 
+<!-- SPIN WHEEL OVERLAY -->
+<div class="overlay hidden" id="wheelOverlay">
+  <div class="wheel-modal">
+    <button class="wheel-close-btn" onclick="closeWheel()">✕</button>
+    <div class="wheel-title">SPIN WHEEL</div>
+    <div class="wheel-wrap">
+      <div class="wheel-pointer"></div>
+      <canvas id="wheelCanvas" width="540" height="540"></canvas>
+      <canvas id="hubCanvas" width="130" height="130"></canvas>
+    </div>
+    <button class="wheel-spin-btn" id="wheelSpinBtn" onclick="spinWheel()">SPIN</button>
+    <div class="wheel-result" id="wheelResult"></div>
+  </div>
+</div>
+
 <!-- MODAL OVERLAY -->
 <div class="overlay hidden" id="modalOverlay">
   <div class="modal" id="modalContent"></div>
@@ -1324,7 +1465,24 @@ const state = {
   ],
   totalUsers: 4821,
   totalCoins: 12847500,
+  wheelSpinsUsed: 0,
 };
+
+const WHEEL_SEGMENTS = [
+  {label:'10', pts:10, color:'#0f4c5c', dark:'#05222a'},
+  {label:'25', pts:25, color:'#e36414', dark:'#8a3703'},
+  {label:'50', pts:50, color:'#5f0f40', dark:'#360323'},
+  {label:'75', pts:75, color:'#0f4c5c', dark:'#05222a'},
+  {label:'100', pts:100, color:'#e36414', dark:'#8a3703'},
+  {label:'150', pts:150, color:'#5f0f40', dark:'#360323'},
+  {label:'200', pts:200, color:'#0f4c5c', dark:'#05222a'},
+  {label:'500', pts:500, color:'#e36414', dark:'#8a3703'},
+  {label:'1000', pts:1000, color:'#5f0f40', dark:'#360323'},
+  {label:'JACKPOT', pts:10000, color:'#4a154b', dark:'#2b072c', isJackpot:true},
+];
+const WHEEL_SLICE = (Math.PI * 2) / WHEEL_SEGMENTS.length;
+let wheelAngle = 0;
+let wheelSpinning = false;
 
 // =================== BOARD TILES ===================
 const tiles = [];
@@ -1753,9 +1911,8 @@ function landOnTile(pos) {
       break;
     }
     case 'wheel': {
-      const reward = (Math.floor(Math.random()*10)+1)*500;
-      addCoins(reward);
-      showModal(`<h2>🎡 WHEEL OF FORTUNE!</h2><div class="reward-amount">+${reward.toLocaleString()}</div><p>Fortune favors the bold!</p><button class="close-btn" onclick="closeModal()">Spin Again!</button>`);
+      showToast('🎡 Wheel tile activated! Spin for reward.');
+      openWheel();
       break;
     }
     case 'start': {
@@ -1815,6 +1972,152 @@ function showToast(msg, duration=2500) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), duration);
+}
+
+function drawWheel(rot = wheelAngle) {
+  const canvas = document.getElementById('wheelCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const CX = canvas.width / 2;
+  const CY = canvas.height / 2;
+  const R = 250;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, Math.PI * 2);
+  ctx.fillStyle = '#111';
+  ctx.fill();
+
+  for(let i = 0; i < WHEEL_SEGMENTS.length; i++) {
+    const startA = rot + i * WHEEL_SLICE - Math.PI/2;
+    const endA = startA + WHEEL_SLICE;
+    const seg = WHEEL_SEGMENTS[i];
+    ctx.beginPath();
+    ctx.moveTo(CX, CY);
+    ctx.arc(CX, CY, R - 20, startA, endA);
+    ctx.closePath();
+    const g = ctx.createRadialGradient(CX, CY, 60, CX, CY, R - 20);
+    g.addColorStop(0, seg.dark);
+    g.addColorStop(0.8, seg.color);
+    g.addColorStop(1, seg.dark);
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(CX, CY);
+    ctx.rotate(startA + WHEEL_SLICE/2);
+    const rr = (R - 20) * 0.63;
+    ctx.font = seg.isJackpot ? '700 20px Cinzel, serif' : '700 24px Cinzel Decorative, serif';
+    ctx.fillStyle = seg.isJackpot ? '#ffe566' : '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,.8)';
+    ctx.shadowBlur = 6;
+    ctx.fillText(seg.isJackpot ? 'JP' : seg.label, rr, 0);
+    ctx.restore();
+  }
+
+  const rim = ctx.createRadialGradient(CX, CY, R - 30, CX, CY, R + 6);
+  rim.addColorStop(0, '#593e00');
+  rim.addColorStop(0.3, '#ffea80');
+  rim.addColorStop(0.6, '#ffd700');
+  rim.addColorStop(1, '#3a2800');
+  ctx.beginPath();
+  ctx.arc(CX, CY, R - 10, 0, Math.PI * 2);
+  ctx.strokeStyle = rim;
+  ctx.lineWidth = 18;
+  ctx.stroke();
+}
+
+function drawWheelHub() {
+  const hub = document.getElementById('hubCanvas');
+  if(!hub) return;
+  const c = hub.getContext('2d');
+  const cx = hub.width / 2;
+  const cy = hub.height / 2;
+  c.clearRect(0,0,hub.width,hub.height);
+  const ring = c.createLinearGradient(0,0,hub.width,hub.height);
+  ring.addColorStop(0,'#ffea80');
+  ring.addColorStop(.5,'#b8860b');
+  ring.addColorStop(1,'#423000');
+  c.beginPath();
+  c.arc(cx,cy,54,0,Math.PI*2);
+  c.fillStyle = ring;
+  c.fill();
+  const core = c.createRadialGradient(cx-5,cy-5,6,cx,cy,48);
+  core.addColorStop(0,'#22394a');
+  core.addColorStop(.7,'#0b151d');
+  core.addColorStop(1,'#02060a');
+  c.beginPath();
+  c.arc(cx,cy,46,0,Math.PI*2);
+  c.fillStyle = core;
+  c.fill();
+  c.font = '900 12px Cinzel, serif';
+  c.fillStyle = '#ffea80';
+  c.textAlign = 'center';
+  c.fillText('SPIN', cx, cy + 4);
+}
+
+function initWheel() {
+  drawWheel();
+  drawWheelHub();
+  const hub = document.getElementById('hubCanvas');
+  if(hub && !hub.dataset.bound) {
+    hub.addEventListener('click', spinWheel);
+    hub.dataset.bound = '1';
+  }
+}
+
+function openWheel() {
+  document.getElementById('wheelOverlay').classList.remove('hidden');
+  document.getElementById('wheelResult').textContent = '';
+  initWheel();
+}
+
+function closeWheel() {
+  if(wheelSpinning) return;
+  document.getElementById('wheelOverlay').classList.add('hidden');
+}
+
+function getWheelWinner() {
+  const norm = ((wheelAngle % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
+  const pointer = ((Math.PI*2 - norm) + Math.PI*2) % (Math.PI*2);
+  const idx = Math.floor(pointer / WHEEL_SLICE) % WHEEL_SEGMENTS.length;
+  return WHEEL_SEGMENTS[idx];
+}
+
+function spinWheel() {
+  if(wheelSpinning) return;
+  const btn = document.getElementById('wheelSpinBtn');
+  const resultEl = document.getElementById('wheelResult');
+  wheelSpinning = true;
+  if(btn) btn.disabled = true;
+  resultEl.textContent = '';
+  const spins = (6 + Math.floor(Math.random() * 4)) * Math.PI * 2;
+  const targetOffset = Math.random() * Math.PI * 2;
+  const target = wheelAngle + spins + targetOffset;
+  const duration = 4200;
+  const start = performance.now();
+  const from = wheelAngle;
+  function easeOut(t){ return 1 - Math.pow(1 - t, 4); }
+  function tick(now){
+    const p = Math.min(1, (now - start) / duration);
+    wheelAngle = from + (target - from) * easeOut(p);
+    drawWheel(wheelAngle);
+    if(p < 1) {
+      requestAnimationFrame(tick);
+      return;
+    }
+    wheelAngle %= (Math.PI * 2);
+    wheelSpinning = false;
+    state.wheelSpinsUsed++;
+    const win = getWheelWinner();
+    addCoins(win.pts);
+    resultEl.textContent = win.isJackpot ? `JACKPOT! +${win.pts.toLocaleString()} Points` : `+${win.pts.toLocaleString()} Points`;
+    showModal(`<h2>🎡 WHEEL REWARD!</h2><div class="reward-amount">+${win.pts.toLocaleString()}</div><p>${win.isJackpot ? 'JACKPOT HIT! Incredible luck, Captain!' : 'Wheel reward added to your treasury.'}</p><button class="close-btn" onclick="closeModal()">Claim</button>`);
+    spawnCoins();
+    if(btn) btn.disabled = false;
+  }
+  requestAnimationFrame(tick);
 }
 
 function spawnCoins() {

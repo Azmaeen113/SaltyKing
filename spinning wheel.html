@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salty Kingdom – Spin Wheel 3D</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, #1a4a6e 0%, #0a1f33 60%, #030d16 100%);
+    font-family: 'Cinzel', serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Animated Ocean Lighting Effect */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 80% 20%, rgba(0,200,255,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 10% 80%, rgba(255,180,0,0.04) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .game-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    color: #FFD700;
+    text-shadow: 0 0 15px rgba(255,215,0,0.6), 0 4px 8px rgba(0,0,0,0.9);
+    letter-spacing: 5px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    z-index: 2;
+  }
+
+  .wheel-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    /* 3D Container tilt perspective shadow */
+    filter: drop-shadow(0 25px 35px rgba(0,0,0,0.75));
+  }
+
+  /* 3D Realistic Pointer Arrow at Top */
+  .pointer {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 55px;
+    z-index: 30;
+    background: linear-gradient(135deg, #fff 0%, #ffd700 40%, #b8860b 100%);
+    clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+    filter: drop-shadow(0 4px 5px rgba(0,0,0,0.6));
+  }
+  .pointer::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 40px;
+    height: 48px;
+    background: linear-gradient(135deg, #ffffff 0%, #ffea80 50%, #d4af37 100%);
+    clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+  }
+
+  #wheelCanvas {
+    display: block;
+    border-radius: 50%;
+  }
+
+  /* Center hub interactive button setup */
+  .hub-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    z-index: 10;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.4);
+    transition: transform 0.1s ease;
+  }
+  .hub-overlay:active {
+    transform: translate(-50%, -46%) scale(0.96);
+  }
+
+  .spin-btn {
+    margin-top: 2rem;
+    padding: 16px 60px;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.2rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: #1a0a00;
+    background: linear-gradient(145deg, #fff099 0%, #ffb800 50%, #cc7000 100%);
+    border: 2px solid #ffea80;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow:
+      0 6px 0 #8B4A00,
+      0 12px 25px rgba(255,160,0,0.4),
+      inset 0 2px 2px rgba(255,255,255,0.6);
+    transition: all 0.1s ease;
+    z-index: 2;
+    text-transform: uppercase;
+  }
+  .spin-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 0 #8B4A00,
+      0 15px 30px rgba(255,160,0,0.5),
+      inset 0 2px 2px rgba(255,255,255,0.6);
+  }
+  .spin-btn:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow:
+      0 2px 0 #8B4A00,
+      0 6px 15px rgba(255,160,0,0.4);
+  }
+  .spin-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: 0 4px 0 #553000;
+  }
+
+  /* Result overlay */
+  .result-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 10, 20, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .result-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .result-card {
+    background: linear-gradient(165deg, #16324f 0%, #071322 100%);
+    border: 3px solid #FFD700;
+    border-radius: 30px;
+    padding: 3rem;
+    text-align: center;
+    box-shadow: 0 0 50px rgba(255,215,0,0.3), 0 30px 60px rgba(0,0,0,0.9);
+    transform: scale(0.75);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .result-overlay.show .result-card {
+    transform: scale(1);
+  }
+  .result-icon {
+    font-size: 4rem;
+    color: #ffb800;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 0 10px rgba(255,184,0,0.5));
+  }
+  .result-label {
+    font-size: 1.1rem;
+    color: #8da9c4;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .result-value {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 3.2rem;
+    font-weight: 900;
+    color: #FFD700;
+    text-shadow: 0 0 25px rgba(255,200,0,0.6), 0 2px 4px rgba(0,0,0,0.5);
+    margin-bottom: 2rem;
+  }
+  .result-close-btn {
+    padding: 14px 45px;
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #1a0a00;
+    background: linear-gradient(145deg, #FFE566, #FFB800);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #8B4A00, 0 8px 20px rgba(255,160,0,0.3);
+  }
+
+  /* Stars Background Layer */
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star {
+    position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%;
+    animation: twinkle var(--d) ease-in-out infinite alternate;
+  }
+  @keyframes twinkle { from { opacity: 0.1; } to { opacity: 0.8; } }
+
+  .coins-burst { position: fixed; inset: 0; pointer-events: none; z-index: 90; }
+  .coin-particle {
+    position: absolute;
+    color: #ffd700;
+    font-size: 1.8rem;
+    animation: coinFall var(--dur) ease-in forwards;
+    top: -50px;
+  }
+  @keyframes coinFall {
+    0%   { transform: translateY(0) rotate(0deg) scale(0.5); opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translateY(105vh) rotate(540deg) scale(1.1); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<h1 class="game-title">⚓ SALTY KINGDOM ⚓</h1>
+
+<div class="wheel-container">
+  <div class="pointer"></div>
+  <canvas id="wheelCanvas" width="540" height="540"></canvas>
+  <canvas id="hubCanvas" class="hub-overlay" width="130" height="130" onclick="spinWheel()"></canvas>
+</div>
+
+<button class="spin-btn" id="spinBtn" onclick="spinWheel()">SPIN WHEEL</button>
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-card">
+    <div class="result-icon" id="resultIcon"><i class="fa-solid fa-trophy"></i></div>
+    <div class="result-label">Claim Reward</div>
+    <div class="result-value" id="resultValue">1,000</div>
+    <button class="result-close-btn" onclick="closeResult()">CLAIM & SPIN AGAIN</button>
+  </div>
+</div>
+
+<div class="coins-burst" id="coinsBurst"></div>
+
+<script>
+// ── Segment Data configuration loaded with FontAwesome vectors ──────────────────
+const SEGMENTS = [
+  { label: 'JACKPOT', pts: 10000, color: '#4a154b', darkColor: '#2b072c', icon: 'fa-crown', isJackpot: true },
+  { label: '1000',    pts: 1000,  color: '#0f4c5c', darkColor: '#05222a', icon: 'fa-gem' },
+  { label: '25',      pts: 25,    color: '#e36414', darkColor: '#8a3703', icon: 'fa-skull-crossbones' },
+  { label: '75',      pts: 75,    color: '#5f0f40', darkColor: '#360323', icon: 'fa-anchor' },
+  { label: '50',      pts: 50,    color: '#0f4c5c', darkColor: '#05222a', icon: 'fa-coins' },
+  { label: '505',     pts: 505,   color: '#e36414', darkColor: '#8a3703', icon: 'fa-shield-halved' },
+  { label: '210',     pts: 210,   color: '#5f0f40', darkColor: '#360323', icon: 'fa-compass' },
+  { label: '1000',    pts: 1000,  color: '#0f4c5c', darkColor: '#05222a', icon: 'fa-gem' },
+  { label: '70',      pts: 70,    color: '#e36414', darkColor: '#8a3703', icon: 'fa-skull-crossbones' },
+  { label: '1000',    pts: 1000,  color: '#5f0f40', darkColor: '#360323', icon: 'fa-gem' },
+  { label: '10',      pts: 10,    color: '#0f4c5c', darkColor: '#05222a', icon: 'fa-skull' },
+  { label: '20',      pts: 20,    color: '#e36414', darkColor: '#8a3703', icon: 'fa-bolt' },
+];
+
+const N = SEGMENTS.length;
+const SLICE = (Math.PI * 2) / N;
+
+const wCanvas = document.getElementById('wheelCanvas');
+const wCtx    = wCanvas.getContext('2d');
+const hCanvas = document.getElementById('hubCanvas');
+const hCtx    = hCanvas.getContext('2d');
+
+const CX = 270; 
+const CY = 270;
+const R  = 250; // Outer boundaries
+
+let currentAngle = 0;
+let isSpinning   = false;
+
+// ── Draw Wheel Engine ────────────────────────────────────────────────────────
+function drawWheel(rot) {
+  wCtx.clearRect(0, 0, wCanvas.width, wCanvas.height);
+
+  // 1. Core Base Wheel Matte shadow
+  wCtx.beginPath();
+  wCtx.arc(CX, CY, R, 0, Math.PI * 2);
+  wCtx.fillStyle = '#111';
+  wCtx.fill();
+
+  // 2. Draw Segments with Inner 3D Volumetric Shadows
+  for (let i = 0; i < N; i++) {
+    const startA = rot + i * SLICE - Math.PI / 2;
+    const endA   = startA + SLICE;
+    const seg    = SEGMENTS[i];
+
+    // Main slice structure base
+    wCtx.beginPath();
+    wCtx.moveTo(CX, CY);
+    wCtx.arc(CX, CY, R - 20, startA, endA);
+    wCtx.closePath();
+    
+    // Creating realistic deep bevel inside slice via linear segment lighting
+    let segGrad = wCtx.createRadialGradient(CX, CY, 50, CX, CY, R - 20);
+    segGrad.addColorStop(0, seg.darkColor);
+    segGrad.addColorStop(0.8, seg.color);
+    segGrad.addColorStop(1, seg.darkColor);
+    
+    wCtx.fillStyle = segGrad;
+    wCtx.fill();
+
+    // Metallic separating dividers
+    wCtx.beginPath();
+    wCtx.moveTo(CX, CY);
+    wCtx.lineTo(CX + (R - 20) * Math.cos(startA), CY + (R - 20) * Math.sin(startA));
+    wCtx.strokeStyle = 'rgba(255, 215, 0, 0.25)';
+    wCtx.lineWidth = 2;
+    wCtx.stroke();
+
+    // 3. Render High-Res Typography and Fonts Vector Graphics
+    wCtx.save();
+    wCtx.translate(CX, CY);
+    wCtx.rotate(startA + SLICE / 2);
+
+    const midRadius = (R - 20) * 0.62;
+
+    // Vector Graphics FlatIcon implementation directly via system metrics mapping
+    if (seg.icon) {
+      wCtx.fillStyle = seg.isJackpot ? '#FFF099' : 'rgba(255,255,255,0.85)';
+      wCtx.font = '900 18px "Font Awesome 6 Free"';
+      wCtx.textAlign = 'center';
+      wCtx.textBaseline = 'middle';
+      
+      // Map fontawesome unicode character programmatically directly onto context
+      let unicodeChar = getIconUnicode(seg.icon);
+      wCtx.fillText(unicodeChar, midRadius + 32, 0);
+    }
+
+    // Dynamic Label Rendering Engine
+    if (seg.isJackpot) {
+      wCtx.font = '900 12px "Cinzel", serif';
+      wCtx.fillStyle = '#FFE566';
+      wCtx.textAlign = 'center';
+      wCtx.shadowColor = '#ff8c00';
+      wCtx.shadowBlur = 6;
+      wCtx.fillText('JACKPOT', midRadius - 8, -6);
+      wCtx.font = '700 11px "Cinzel", serif';
+      wCtx.fillText('10,000', midRadius - 8, 8);
+    } else {
+      wCtx.font = '700 16px "Cinzel Decorative", serif';
+      wCtx.fillStyle = '#FFFFFF';
+      wCtx.textAlign = 'center';
+      wCtx.textBaseline = 'middle';
+      wCtx.shadowColor = 'rgba(0,0,0,0.9)';
+      wCtx.shadowBlur = 4;
+      wCtx.fillText(seg.label, midRadius, 0);
+    }
+    wCtx.restore();
+  }
+
+  // 4. Glossy Overlay Highlight across the entire wheel (Simulating glass reflection)
+  const glassGrad = wCtx.createLinearGradient(0, 0, wCanvas.width, wCanvas.height);
+  glassGrad.addColorStop(0, 'rgba(255,255,255,0.15)');
+  glassGrad.addColorStop(0.4, 'rgba(255,255,255,0.02)');
+  glassGrad.addColorStop(0.5, 'rgba(0,0,0,0.2)');
+  glassGrad.addColorStop(1, 'rgba(0,0,0,0.6)');
+  wCtx.beginPath();
+  wCtx.arc(CX, CY, R - 20, 0, Math.PI * 2);
+  wCtx.fillStyle = glassGrad;
+  wCtx.fill();
+
+  // 5. Build 3D Realistic Gold Outer Rim
+  drawMetallic3DRim();
+}
+
+// ── Realistic Metallic 3D Rim Blueprint ──────────────────────────────────────
+function drawMetallic3DRim() {
+  // Heavy multi-layered gradient layout simulating 3D gold extrusion brass chrome
+  const rimGrad = wCtx.createRadialGradient(CX, CY, R - 22, CX, CY, R + 4);
+  rimGrad.addColorStop(0, '#593e00');   // Deep inner bevel shadow
+  rimGrad.addColorStop(0.1, '#b8860b'); // Gold Body
+  rimGrad.addColorStop(0.3, '#ffea80'); // Gloss Highlight line
+  rimGrad.addColorStop(0.5, '#ffd700'); // Clean pure gold
+  rimGrad.addColorStop(0.8, '#b8860b'); // Burnished transition
+  rimGrad.addColorStop(0.95, '#ffe566');// Outer edge gleam
+  rimGrad.addColorStop(1, '#3a2800');   // Outer dropshadow edge
+
+  wCtx.beginPath();
+  wCtx.arc(CX, CY, R - 10, 0, Math.PI * 2);
+  wCtx.strokeStyle = rimGrad;
+  wCtx.lineWidth = 20;
+  wCtx.stroke();
+
+  // Draw 3D Spherical Brass Studs / Rivets around Rim edge perimeter
+  for (let i = 0; i < N * 2; i++) {
+    const angle = i * (SLICE / 2) - Math.PI / 2;
+    const sx = CX + (R - 10) * Math.cos(angle);
+    const sy = CY + (R - 10) * Math.sin(angle);
+
+    // Stud volumetric shadow mapping
+    const studGleam = wCtx.createRadialGradient(sx - 2, sy - 2, 1, sx, sy, 5);
+    studGleam.addColorStop(0, '#ffffff');
+    studGleam.addColorStop(0.4, '#fff2a3');
+    studGleam.addColorStop(0.8, '#b8860b');
+    studGleam.addColorStop(1, '#423000');
+
+    wCtx.beginPath();
+    wCtx.arc(sx, sy, 5, 0, Math.PI * 2);
+    wCtx.fillStyle = studGleam;
+    wCtx.fill();
+    wCtx.strokeStyle = 'rgba(0,0,0,0.4)';
+    wCtx.lineWidth = 0.5;
+    wCtx.stroke();
+  }
+}
+
+// ── Heavy 3D Interactive Center Hub ──────────────────────────────────────────
+function drawHub() {
+  const cx = hCanvas.width / 2;
+  const cy = hCanvas.height / 2;
+  const r = 54;
+
+  hCtx.clearRect(0, 0, hCanvas.width, hCanvas.height);
+
+  // Outer 3D gold bezel structure
+  const goldRing = hCtx.createLinearGradient(0, 0, hCanvas.width, hCanvas.height);
+  goldRing.addColorStop(0, '#ffea80');
+  goldRing.addColorStop(0.5, '#b8860b');
+  goldRing.addColorStop(1, '#423000');
+  hCtx.beginPath();
+  hCtx.arc(cx, cy, r, 0, Math.PI * 2);
+  hCtx.fillStyle = goldRing;
+  hCtx.fill();
+
+  // Dark Inner Core Depth Map
+  const coreGrad = hCtx.createRadialGradient(cx - 5, cy - 5, 5, cx, cy, r - 6);
+  coreGrad.addColorStop(0, '#22394a');
+  coreGrad.addColorStop(0.7, '#0b151d');
+  coreGrad.addColorStop(1, '#02060a');
+  hCtx.beginPath();
+  hCtx.arc(cx, cy, r - 6, 0, Math.PI * 2);
+  hCtx.fillStyle = coreGrad;
+  hCtx.fill();
+
+  // Render Vector graphic skull inside Hub safely
+  hCtx.fillStyle = '#ffea80';
+  hCtx.font = '900 32px "Font Awesome 6 Free"';
+  hCtx.textAlign = 'center';
+  hCtx.textBaseline = 'middle';
+  hCtx.shadowBlur = 8;
+  hCtx.shadowColor = 'rgba(255,215,0,0.5)';
+  hCtx.fillText(getIconUnicode('fa-skull'), cx, cy - 12);
+  hCtx.shadowBlur = 0;
+
+  // Tiny branded tracking text
+  hCtx.font = '900 8px "Cinzel", serif';
+  hCtx.fillStyle = '#ffffff';
+  hCtx.letterSpacing = '1px';
+  hCtx.fillText('SPIN', cx, cy + 18);
+  hCtx.fillStyle = '#ffea80';
+  hCtx.fillText('KINGDOM', cx, cy + 28);
+}
+
+// Helper mapping function to parse FontAwesome icons unicode to HTML5 Canvas context values
+function getIconUnicode(iconName) {
+  const map = {
+    'fa-crown': '\uf521',
+    'fa-gem': '\uf3a5',
+    'fa-skull-crossbones': '\uf714',
+    'fa-anchor': '\uf13d',
+    'fa-coins': '\uf51e',
+    'fa-shield-halved': '\uf3ed',
+    'fa-compass': '\uf14e',
+    'fa-skull': '\uf54c',
+    'fa-bolt': '\uf0e7',
+    'fa-trophy': '\uf091'
+  };
+  return map[iconName] || '\uf005';
+}
+
+// ── Physics Wheel Rotational Spin Logic ──────────────────────────────────────
+function spinWheel() {
+  if (isSpinning) return;
+  isSpinning = true;
+  document.getElementById('spinBtn').disabled = true;
+
+  const spins = (6 + Math.floor(Math.random() * 5)) * Math.PI * 2; 
+  const targetOffset = Math.random() * Math.PI * 2;
+  const totalTargetAngle = currentAngle + spins + targetOffset;
+  const duration = 5000; // Smooth 5s physics drop speed cycle
+  const startTime = performance.now();
+  const startAngle = currentAngle;
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 4); // Cubic ease out curve
+  }
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = easeOutCubic(progress);
+
+    currentAngle = startAngle + (totalTargetAngle - startAngle) * eased;
+    drawWheel(currentAngle);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      currentAngle = totalTargetAngle % (Math.PI * 2);
+      isSpinning = false;
+      showResult();
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+function getWinningSegment() {
+  let norm = ((currentAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  let localPointer = ((Math.PI * 2 - norm) + Math.PI * 2) % (Math.PI * 2);
+  let idx = Math.floor(localPointer / SLICE) % N;
+  return SEGMENTS[idx];
+}
+
+function showResult() {
+  const seg = getWinningSegment();
+  const overlay = document.getElementById('resultOverlay');
+  const valEl    = document.getElementById('resultValue');
+  const iconEl   = document.getElementById('resultIcon');
+
+  // Change modern modal vector icons dynamically inside execution array
+  iconEl.innerHTML = `<i class="fa-solid ${seg.icon}"></i>`;
+  
+  if (seg.isJackpot) {
+    valEl.textContent = 'JACKPOT! 10,000 PTS';
+    burstCoins(45);
+  } else {
+    valEl.textContent = seg.pts.toLocaleString() + ' Points';
+    if (seg.pts >= 500) burstCoins(20);
+  }
+
+  overlay.classList.add('show');
+}
+
+function closeResult() {
+  document.getElementById('resultOverlay').classList.remove('show');
+  document.getElementById('spinBtn').disabled = false;
+  document.getElementById('coinsBurst').innerHTML = '';
+}
+
+// ── Particle FX Animations ───────────────────────────────────────────────────
+function burstCoins(count) {
+  const container = document.getElementById('coinsBurst');
+  container.innerHTML = '';
+  const particleIcons = ['\uf51e', '\uf3a5', '\uf521']; // FontAwesome Hex codes for coin, gem, crown
+  
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('span');
+    el.className = 'coin-particle';
+    el.style.fontFamily = '"Font Awesome 6 Free"';
+    el.style.fontWeight = '900';
+    el.textContent = particleIcons[Math.floor(Math.random() * particleIcons.length)];
+    
+    const dur = 1.8 + Math.random() * 1.5;
+    el.style.cssText += `left:${Math.random() * 100}%; --dur:${dur}s; animation-delay:${Math.random() * 0.5}s;`;
+    container.appendChild(el);
+  }
+}
+
+// Generate Ambient Backdrop
+(function initStars() {
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 70; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.cssText = `left:${Math.random()*100}%; top:${Math.random()*100}%; --d:${1.5 + Math.random()*2}s; animation-delay:${Math.random()*2}s;`;
+    container.appendChild(s);
+  }
+})();
+
+// Wait for FontAwesome to load vector fonts properly before initial canvas compilation pass
+window.addEventListener('load', () => {
+  drawWheel(0);
+  drawHub();
+});
+</script>
+</body>
+</html>
